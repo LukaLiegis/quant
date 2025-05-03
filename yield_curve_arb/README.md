@@ -16,3 +16,26 @@ from these patterns often mean-revert for several reasons:
    creating disconnects that eventually correct as arbitrageurs step in.
 
 This model identifies these temporary dislocations and assumes they will mean-revert.
+
+
+
+# Key Assumptions and Limitations
+
+1. **Stationarity Assumption**: We assume that the PCA factors derived from our training window 
+   are stable over time. During regime shifts (like the 2008 financial crisis or COVID-19), 
+   these relationships can break down.
+
+2. **Transaction Cost Simplification**: We don't model transaction costs realistically. 
+   In practice, bid-ask spreads vary by tenor and market conditions.
+
+3. **Holding Period Simplification**: We use a fixed holding period rather than dynamically 
+   determining exit points based on convergence or stop-loss criteria.
+
+4. **Financing Cost Omission**: We don't account for the cost of financing positions, which would 
+   reduce real-world returns, especially for highly leveraged positions.
+
+5. **Duration/DV01 Mismatch**: We treat each tenor point equally, but in reality, longer-dated 
+   bonds have higher duration and thus higher price sensitivity to yield changes.
+
+
+
