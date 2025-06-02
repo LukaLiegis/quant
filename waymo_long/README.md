@@ -17,6 +17,20 @@ The primary method of this method is the interpretability since each hedge ratio
 
 ### 2 - PCA Hedge
 
+This method first extracts the dominant patterns of co-movement among advertising stocks, then hedges Google's exposure to these systematic factors.
+
+$X_{scaled} = \frac{X - \mu}{\sigma}$
+
+$\Sigma = \frac{X^TX}{n-1} = P\Lambda P^T \quad \text{(eigendecomposition)}$
+
+$PC_t = X_{scaled,t} \times P \quad \text{(principal components)}$
+
+$R_{GOOGL,t} = \alpha + \gamma_1 PC_{1,t} + \gamma_2 PC_{2,t} + \gamma_3 PC_{3,t} + \varepsilon_t$
+
+$\text{hedge_weights} = -P \times \hat{\gamma} \quad \text{(back-transform to asset weights)}$
+
+The main drawback of this method is the sacrifice of interpretability since the principal components are abstract linear combinations rather than ecnnomicaly meaningful factors. 
+
 ### 3 - Time-Varying Beta Hedge
 
 This approach uses a rolling window approach, the hedge ratio adapts to recent correlation patterns rather than assuming constant relationships.
