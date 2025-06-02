@@ -1,6 +1,6 @@
 ## Waymo Pure Play
 
-Based on [this](https://x.com/JaredKubin/status/1928636508107342124) tweet from Jared L Kubin I was interested in implementing a hedging strategy to be only long waymo by removing exposure to Google's other businesses (advertising, cloud, youtube). The core idea is that Google trades at a conglomerate discount where Waymo (which is a tiny fraction of the revenue) represents significant value but is obscured by the other parts of Google's business.
+Based on [this](https://x.com/JaredKubin/status/1928636508107342124) tweet from Jared L Kubin I was interested in implementing a hedging strategy to be only long waymo by removing exposure to Google's other businesses (advertising, cloud, YouTube). The core idea is that Google trades at a conglomerate discount where Waymo (which is a tiny fraction of the revenue) represents significant value but is obscured by the other parts of Google's business.
 
 There are three hedging approaches applied:
 1. Multivariate linear regression:
@@ -17,7 +17,7 @@ The primary method of this method is the interpretability since each hedge ratio
 
 ### 2 - PCA Hedge
 
-This method first extracts the dominant patterns of co-movement among advertising stocks, then hedges Google's exposure to these systematic factors.
+This method first extracts the dominant patterns of co-movement among advertising/technology stocks, then hedges Google's exposure to these systematic factors.
 
 $X_{scaled} = \frac{X - \mu}{\sigma}$
 
@@ -29,7 +29,7 @@ $R_{GOOGL,t} = \alpha + \gamma_1 PC_{1,t} + \gamma_2 PC_{2,t} + \gamma_3 PC_{3,t
 
 $\text{hedge_weights} = -P \times \hat{\gamma} \quad \text{(back-transform to asset weights)}$
 
-The main drawback of this method is the sacrifice of interpretability since the principal components are abstract linear combinations rather than ecnnomicaly meaningful factors. 
+The main drawback of this method is the sacrifice of interpretability since the principal components are abstract linear combinations rather than economically meaningful factors. 
 
 ### 3 - Time-Varying Beta Hedge
 
@@ -45,8 +45,19 @@ $R_{hedged,t} = R_{GOOGL,t} + \text{hedge_ratio}t \times R_{hedge,t}$
 
 The time-varying approach adapts to changing market conditions and can capture structural breaks in the relationship between Google and its sector exposures. This flexibility comes at the cost of increased model complexity and higher transaction costs due to more frequent rebalancing requirements.
 
-### Conculsion
+### Analysis
 
 ![ReturnComparison](myplot.png)
 
-In conclusion waymo does not seem to currently be a good part of the Google business to isolate.
+
+
+### Conclusion
+
+While the implemented hedging strategies successfully reduce Google's correlation with advertising and cloud computing sectors, the resulting "Waymo pure-play" exposure remains noisy and difficult to interpret.
+
+The synthetic pure-play approach shows technical merit, investors seeking autonomous vehicle exposure might achieve better risk-adjusted returns through dedicated AV/robotics ETFs or direct investment in pure-play autonomous vehicle companies, rather than attempting to extract embedded value from Google's complex business portfolio.
+
+### Future Research
+
+- Event Studies: Analyze Google's price response to Waymo-specific news vs. advertising/cloud developments
+- Cross-Sectional Analysis: Compare extraction effectiveness across other conglomerate discounts (AWS from Amazon, Azure from Microsoft)
