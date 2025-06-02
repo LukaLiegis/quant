@@ -79,7 +79,7 @@ def apply_portfolio_risk_targeting(positions, returns, vol_forecast, target_vol:
     realized_vol = portfolio_returns.rolling(lookback).std() * np.sqrt(252)
 
     risk_scalar = target_vol / realized_vol
-    risk_scalar = risk_scalar.fillna(1.0).clip(min=0.5, max=2.0)
+    risk_scalar = risk_scalar.fillna(1.0).clip(lower=0.5, upper=2.0)
 
     scaled_positions = positions.multiply(risk_scalar, axis=0)
     return scaled_positions
@@ -154,38 +154,25 @@ def backtest_strategy(prices, universe_dict):
 
 def plot_results(results, prices):
     """Plot strategy results"""
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(15, 12))
 
     portfolio_cumulative = (1 + results['portfolio_returns']).cumprod()
-    ax1.plot(portfolio_cumulative.index, portfolio_cumulative.values)
-    ax1.set_title('Portfolio Cumulative Returns')
-    ax1.set_ylabel('Cumulative Return')
-    ax1.grid(True)
-
     spy_returns = calculate_returns(prices['SPY'])
     spy_cumulative = (1 + spy_returns).cumprod()
-    ax2.plot(portfolio_cumulative.index, portfolio_cumulative.values, label='Momentum Strategy')
-    ax2.plot(spy_cumulative.index, spy_cumulative.values, label='SPY Buy & Hold')
-    ax2.set_title('Strategy vs SPY')
-    ax2.set_ylabel('Cumulative Return')
-    ax2.legend()
-    ax2.grid(True)
+    ax1.plot(portfolio_cumulative.index, portfolio_cumulative.values, label='Momentum Strategy')
+    ax1.plot(spy_cumulative.index, spy_cumulative.values, label='SPY Buy & Hold')
+    ax1.set_title('Strategy vs SPY')
+    ax1.set_ylabel('Cumulative Return')
+    ax1.legend()
+    ax1.grid(True)
 
     rolling_sharpe = results['portfolio_returns'].rolling(252).mean() / results['portfolio_returns'].rolling(
         252).std() * np.sqrt(252)
-    ax3.plot(rolling_sharpe.index, rolling_sharpe.values)
-    ax3.set_title('Rolling 1-Year Sharpe Ratio')
-    ax3.set_ylabel('Sharpe Ratio')
-    ax3.axhline(y=0, color='r', linestyle='--', alpha=0.5)
-    ax3.grid(True)
-
-    recent_positions = results['positions'].tail(252)
-    im = ax4.imshow(recent_positions.T.values, aspect='auto', cmap='RdBu', vmin=-0.1, vmax=0.1)
-    ax4.set_title('Recent Positions Heatmap')
-    ax4.set_ylabel('Assets')
-    ax4.set_yticks(range(len(recent_positions.columns)))
-    ax4.set_yticklabels(recent_positions.columns)
-    plt.colorbar(im, ax=ax4)
+    ax2.plot(rolling_sharpe.index, rolling_sharpe.values)
+    ax2.set_title('Rolling 1-Year Sharpe Ratio')
+    ax2.set_ylabel('Sharpe Ratio')
+    ax2.axhline(y=0, color='r', linestyle='--', alpha=0.5)
+    ax2.grid(True)
 
     plt.tight_layout()
     plt.show()
