@@ -8,7 +8,7 @@ UNIVERSE = {
     'equities': ['SPY', 'QQQ', 'EFA', 'EEM', 'IWM'],
     'bonds': ['TLT', 'IEF', 'LQD', 'HYG'],
     'commodities': ['GLD', 'SLV', 'USO', 'DBA'],
-    'Currencies': ['UUP', 'FXE', 'FXY', 'FXA']
+    'currencies': ['UUP', 'FXE', 'FXY', 'FXA']
 }
 
 ALL_TICKERS = [ticker for sector in UNIVERSE.values() for ticker in sector]
