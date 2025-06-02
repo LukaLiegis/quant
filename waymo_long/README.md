@@ -48,3 +48,5 @@ The time-varying approach adapts to changing market conditions and can capture s
 ### Conculsion
 
 ![ReturnComparison](myplot.png)
+
+In conclusion waymo does not seem to currently be a good part of the Google business to isolate.
