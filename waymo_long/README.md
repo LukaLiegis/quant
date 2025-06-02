@@ -1,6 +1,6 @@
 ## Waymo Pure Play
 
-Based on this tweet from Jared L Kubin I was interested in implementing a hedging strategy to be only long waymo by removing exposure to Google's other businesses (advertising, cloud, youtube).
+Based on [this](https://x.com/JaredKubin/status/1928636508107342124) tweet from Jared L Kubin I was interested in implementing a hedging strategy to be only long waymo by removing exposure to Google's other businesses (advertising, cloud, youtube). The core idea is that Google trades at a conglomerate discount where Waymo (which is a tiny fraction of the revenue) represents significant value but is obscured by the other parts of Google's business.
 
 There are three hedging approaches applied:
 1. Multivariate linear regression:
@@ -12,3 +12,7 @@ There are three hedging approaches applied:
 ### 2 - PCA Hedge
 
 ### 3 - Time-Varying Beta Hedge
+
+### Conculsion
+
+![ReturnComparison](myplot.png)
