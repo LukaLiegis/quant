@@ -166,7 +166,7 @@ def backtest_strategy(
         current_pos = actual_positions.iloc[i - 1] if i > 0 else None
         target_pos = risk_targeted_positions.iloc[i]
 
-        new_pos = pd.Series(index=prices.index, dtype='float64').fillna(0.0)
+        new_pos = pd.Series(index=prices.columns, dtype='float64').fillna(0.0)
         for ticker in prices.columns:
             if not pd.isna(target_pos[ticker]):
                 current_ticker_pos = current_pos[ticker] if current_pos is not None else 0
