@@ -8,6 +8,8 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
+pd.set_option('display.max_columns', None)
+
 target_ticker = 'GOOGL'
 
 ad_universe = [
