@@ -93,6 +93,7 @@ def apply_trading_buffer(current_positions, target_positions, buffer_size: float
     trade_signal = np.abs(position_diff) > buffer_size
 
     new_positions = current_positions.copy()
+    new_positions = new_positions.astype('float64')
     new_positions[trade_signal] = target_positions[trade_signal]
 
     return new_positions
@@ -123,7 +124,7 @@ def backtest_strategy(prices, universe_dict):
 
     risk_targeted_positions = apply_portfolio_risk_targeting(target_positions, returns, vol_forecasts)
 
-    actual_positions = pd.DataFrame(index=prices.index, columns=prices.columns).fillna(0)
+    actual_positions = pd.DataFrame(index=prices.index, columns=prices.columns, dtype='float64').fillna(0.0)
 
     for i in range(1, len(risk_targeted_positions)):
         current_pos = actual_positions.iloc[i - 1] if i > 1 else None
@@ -133,7 +134,7 @@ def backtest_strategy(prices, universe_dict):
     portfolio_returns = (actual_positions.shift(1) * returns).sum(axis = 1)
 
     total_return = (1 + portfolio_returns).cumprod().iloc[-1] - 1
-    annual_return = (1 + portfolio_returns).resample('Y').prod().mean() - 1
+    annual_return = (1 + portfolio_returns).resample('YE').prod().mean() - 1
     annual_vol = portfolio_returns.std() * np.sqrt(252)
     sharpe_ratio = annual_return / annual_vol if annual_vol > 0 else 0
     max_dd = calculate_max_drawdown(returns)
