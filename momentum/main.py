@@ -99,7 +99,17 @@ def apply_trading_buffer(current_positions, target_positions, buffer_size: float
     return new_positions
 
 
-def calculate_max_drawdown(returns):
+def calculate_transaction_costs(
+        old_positions: pd.DataFrame,
+        new_positions: pd.DataFrame,
+        cost_per_trade: float = 0.001
+) -> pd.Series:
+    position_changes = np.abs(new_positions - old_positions)
+    daily_costs = (position_changes * cost_per_trade).sum(axis = 1)
+    return daily_costs
+
+
+def calculate_max_drawdown(returns: pd.Series) -> float:
     cumulative = (1 + returns).cumprod()
     rolling_max = cumulative.expanding().max()
     drawdown = (cumulative - rolling_max) / rolling_max
