@@ -37,17 +37,24 @@ def calculate_volatility_forecast(
 
 def calculate_trend_signal(
         prices: pd.DataFrame,
-        fast_window: int = 60,
-        slow_window: int = 180
+        fast_window: int = 21,
+        medium_window: int = 63,
+        slow_window: int = 252,
 ) -> pd.DataFrame:
-    fast_ma = prices.rolling(fast_window).mean()
-    slow_ma = prices.rolling(slow_window).mean()
-
     returns = calculate_returns(prices)
     vol = calculate_volatility_forecast(returns)
 
-    raw_signal = (fast_ma - slow_ma) / slow_ma
-    trend_signal = raw_signal / vol
+    signal_1 = np.sign(returns.rolling(fast_window).sum())
+    signal_2 = np.sign(returns.rolling(medium_window).sum())
+    signal_3 = np.sign(returns.rolling(slow_window).sum())
+
+    combined_signals = (
+        signal_1 * 0.2 +
+        signal_2 * 0.5 +
+        signal_3 * 0.3
+    )
+
+    trend_signal = combined_signals / vol
 
     return trend_signal.fillna(0)
 
