@@ -13,6 +13,7 @@ target_ticker = 'GOOGL'
 ad_universe = [
     'META',
     'AMZN',
+    'AAPL',
     'NFLX',
     'DIS',
     'SNAP',
