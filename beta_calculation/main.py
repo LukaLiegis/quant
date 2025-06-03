@@ -50,6 +50,55 @@ def ols_beta(
     return results_df
 
 
+def ewma_beta(
+        stock_returns,
+        market_returns,
+        window: int = 252,
+        half_life: int = 63,
+        min_periods: int = 126,
+):
+    aligned_data = pd.concat([stock_returns, market_returns], axis=1).dropna()
+    aligned_data.columns = ['stock', 'market']
+
+    betas = []
+    alphas = []
+
+    for i in range(len(aligned_data)):
+        start_idx = max(0, i - window + 1)
+        window_data = aligned_data.iloc[start_idx:i + 1]
+
+        if len(window_data) >= min_periods:
+            try:
+                decay = np.log(0.5) / half_life
+                weights = np.exp(decay * np.arange(len(window_data) - 1, -1, -1))
+                weights = weights / weights.sum()
+
+                y = window_data['stock'].values
+                x = window_data['market'].values
+
+                W = np.diag(weights)
+                X = np.column_stack([np.ones(len(x)), x])
+
+                coeffs = np.linalg.solve(X.T @ W @ X, X.T @ W @ y)
+                alpha, beta = coeffs
+
+                betas.append(beta)
+                alphas.append(alpha)
+            except:
+                betas.append(np.nan)
+                alphas.append(np.nan)
+        else:
+            betas.append(np.nan)
+            alphas.append(np.nan)
+
+    results_df = pd.DataFrame({
+        'beta': betas,
+        'alphas': alphas,
+    }).set_index(aligned_data.index)
+
+    return results_df
+
+
 def ridge_regression_beta(
         stock_returns,
         market_returns,
@@ -144,6 +193,8 @@ def plot_rolling_betas(beta_df):
 
     recent_data['OLS_Beta'].plot(ax = ax, color = 'blue', linestyle = '-', label = 'OLS Beta')
     recent_data['Ridge_Regression'].plot(ax = ax, color = 'orange', linestyle = '-', label = 'Robust Regression')
+    recent_data['EWMA_Short'].plot(ax=ax, color='purple', linestyle='-', label='EWMA Short')
+    recent_data['EWMA_Long'].plot(ax=ax, color='brown', linestyle='-', label='EWMA Long')
     #recent_data['Realized_Beta'].plot(ax=ax, color='red', linestyle='--', label='Benchmark Beta')
 
     ax.set_title('2-Year Rolling Beta')
@@ -163,16 +214,20 @@ stock_returns = calculate_returns(stock)
 market_returns = calculate_returns(market)
 
 basic_beta = ols_beta(stock_returns, market_returns)
+ewma_short = ewma_beta(stock_returns, market_returns, half_life=63)
+ewma_long = ewma_beta(stock_returns, market_returns, half_life=168)
 robust_regression = ridge_regression_beta(stock_returns, market_returns)
 realized_beta = calculate_realized_beta(stock_returns, market_returns)
 
 all_beta = pd.DataFrame({
     'OLS_Beta': basic_beta['beta'],
+    'EWMA_Short': ewma_short['beta'],
+    'EWMA_Long': ewma_long['beta'],
     'Ridge_Regression': robust_regression['beta'],
     'Realized_Beta': realized_beta,
 })
 
-for method in ['OLS_Beta', 'Ridge_Regression']:
+for method in ['OLS_Beta', 'Ridge_Regression', 'EWMA_Short', 'EWMA_Long']:
     rmse = calculate_rmse(all_beta, method)
     print(f"{method.replace('_', ' ')}: {rmse:.6f}")
 
