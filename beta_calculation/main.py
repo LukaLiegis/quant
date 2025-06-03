@@ -93,7 +93,23 @@ def calculate_rmse(
 
 
 def plot_rolling_betas(beta_df):
-    ...
+
+    ten_years_ago = pd.Timestamp.now() - pd.DateOffset(years = 10)
+    recent_data = beta_df.loc[beta_df.index < ten_years_ago]
+
+    fig, ax = plt.subplots(figsize = (16, 10))
+
+    recent_data['OLS_beta'].plot(ax = ax, color = 'blue', linestyle = '-', label = 'OLS Beta')
+    #recent_data['Realized_Beta'].plot(ax=ax, color='red', linestyle='--', label='Benchmark Beta')
+
+    ax.set_title('2-Year Rolling Beta')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Beta')
+
+    plt.legend(loc = 'best')
+    ax.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 
 stock = yf.download('AAPL')['Close']
