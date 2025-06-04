@@ -4,6 +4,7 @@ import yfinance as yf
 from scipy import stats
 import matplotlib.pyplot as plt
 from sklearn.linear_model import Ridge
+from filterpy.kalman import KalmanFilter
 from sklearn.metrics import mean_squared_error
 
 
@@ -180,46 +181,59 @@ def calculate_rmse(
 
 
 def plot_rolling_betas(beta_df):
+    methods_to_plot = ['OLS_Beta', 'Kalman_Beta', 'EWMA_Beta', 'Realized_Beta']
 
     ten_years_ago = pd.Timestamp.now() - pd.DateOffset(years = 10)
     recent_data = beta_df.loc[beta_df.index >= ten_years_ago]
 
     fig, ax = plt.subplots(figsize = (16, 10))
 
-    recent_data['OLS_Beta'].plot(ax = ax, color = 'blue', linestyle = '-', label = 'OLS Beta')
-    recent_data['Realized_Beta'].plot(ax=ax, color='red', linestyle='--', label='Benchmark Beta')
+    colors = ['blue', 'green', 'orange', 'red']
+    linestyles = ['-', '-', '-', '--']
 
-    ax.set_title('2-Year Rolling Beta')
+    for i, method in enumerate(methods_to_plot):
+        if method in recent_data.columns:
+            recent_data[method].plot(
+                ax=ax,
+                color=colors[i % len(colors)],
+                linestyle=linestyles[i % len(linestyles)],
+                label=method.replace('_', ' '),
+                alpha=0.8
+            )
+
+    ax.set_title('Beta Estimates Comparison (Last 10 Years)', fontsize=14)
     ax.set_xlabel('Date')
     ax.set_ylabel('Beta')
-
-    plt.legend(loc = 'best')
-    ax.grid(True)
+    ax.legend(loc='best')
+    ax.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
 
 
-stock = yf.download('AAPL')['Close']
-market = yf.download('^GSPC')['Close']
+if __name__ == '__main__':
 
-stock_returns = calculate_returns(stock)
-market_returns = calculate_returns(market)
+    stock = yf.download('AAPL')['Close']
+    market = yf.download('^GSPC')['Close']
 
-log_stock_returns = calculate_log_returns(stock_returns)
-log_market_returns = calculate_log_returns(market_returns)
+    log_stock_returns = calculate_log_returns(stock)
+    log_market_returns = calculate_log_returns(market)
 
-basic_beta = ols_beta(log_stock_returns, log_market_returns)
-realized_beta = calculate_realized_beta(log_stock_returns, log_market_returns)
+    basic_beta = ols_beta(log_stock_returns, log_market_returns)
+    kalman_beta = kalman_filter_beta(log_stock_returns, log_market_returns)
+    ewma_beta_est = ewma_beta(log_stock_returns, log_market_returns)
+    realized_beta = calculate_realized_beta(log_stock_returns, log_market_returns)
 
-all_beta = pd.DataFrame({
-    'OLS_Beta': basic_beta['beta'],
-    'Realized_Beta': realized_beta,
-})
+    all_beta = pd.DataFrame({
+        'OLS_Beta': basic_beta['beta'],
+        'Kalman_Beta': kalman_beta,
+        'EWMA_Beta': ewma_beta_est,
+        'Realized_Beta': realized_beta,
+    })
 
-for method in ['OLS_Beta']:
-    rmse = calculate_rmse(all_beta, method)
-    print(f"{method.replace('_', ' ')}: {rmse:.6f}")
+    for method in ['OLS_Beta', 'Kalman_Beta', 'EWMA_Beta', 'Realized_Beta']:
+        rmse = calculate_rmse(all_beta, method)
+        print(f"{method.replace('_', ' ')}: {rmse:.6f}")
 
-plot_rolling_betas(all_beta)
+    plot_rolling_betas(all_beta)
 
 
