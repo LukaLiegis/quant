@@ -14,7 +14,7 @@ def calculate_log_returns(prices):
 def ols_beta(
         stock_returns,
         market_returns,
-        window: int = 504,
+        window: int = 252,
         min_periods: int = 252,
 ) -> pd.DataFrame:
     aligned_data = pd.concat([stock_returns, market_returns], axis = 1).dropna()
