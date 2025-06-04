@@ -7,16 +7,20 @@ data = pl.read_excel(
     read_options={'header_row': 10},
 )
 
-df_cumulative = data.with_columns(
-    futures_return = (1 + pl.col('Excess return of equal-weight commodities portfolio').cum_sum() - 1),
-    spot_return = (1 + pl.col('Excess spot return of equal-weight commodities portfolio').cum_sum() - 1),
-    interest_rate_adjusted = (1 + pl.col('Interest rate adjusted carry of equal-weight commodities portfolio').cum_sum() - 1),
+data = data.rename({'__UNNAMED__0': 'date'})
+
+data = data.with_columns(
+    (1 + pl.col('Excess return of equal-weight commodities portfolio').cum_sum() - 1).alias('futures_return'),
+     (1 + pl.col('Excess spot return of equal-weight commodities portfolio').cum_sum() - 1).alias('spot_return'),
+    (1 + pl.col('Interest rate adjusted carry of equal-weight commodities portfolio').cum_sum() - 1).alias('interest_rate_adjusted'),
 )
 
+print(data.head())
+
 plt.figure(figsize=(12, 8))
-plt.plot(df_cumulative['futures_return'], label='Excess return', color='blue')
-plt.plot(df_cumulative['spot_return'], label='Spot return', color='red')
-plt.plot(df_cumulative['interest_rate_adjusted'], label='Interest rate adjusted return', color='green')
+plt.plot(data['futures_return'], label='Excess return', color='blue')
+plt.plot(data['spot_return'], label='Spot return', color='red')
+plt.plot(data['interest_rate_adjusted'], label='Interest rate adjusted return', color='green')
 plt.title('Excess Spot Return/Interest Rate Adjusted Carry Return Decomposition')
 plt.xlabel('Date')
 plt.ylabel('Cumulative Returns')
