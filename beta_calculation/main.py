@@ -89,6 +89,47 @@ def calculate_realized_beta(
     return pd.Series(realized_beta, index = aligned_data.index)
 
 
+def kalman_filter_beta(
+        stock_returns,
+        market_returns,
+        process_variance: float = 1e-5,
+        observation_variance: float = 1e-2,
+) -> pd.Series:
+    aligned_data = pd.concat([stock_returns, market_returns], axis = 1).dropna()
+    aligned_data.columns = ['stock', 'market']
+
+    kf = KalmanFilter(dim_x=1, dim_z=1)
+
+    kf.F = np.array([[1.0]])
+    kf.H = np.array([[1.0]])
+
+    kf.Q = np.array([[process_variance]])
+    kf.R = np.array([[observation_variance]])
+
+    kf.x = np.array([[1.0]])
+    kf.P = np.array([[1.0]])
+
+    betas = []
+
+    for i in range(len(aligned_data)):
+        market_ret = aligned_data['market'].iloc[i]
+        stock_ret = aligned_data['stock'].iloc[i]
+
+        if not pd.isna(market_ret) and not pd.isna(stock_ret) and market_ret != 0:
+
+            kf.H = np.array([[market_ret]])
+
+            kf.predict()
+            kf.update(stock_ret)
+
+            betas.append(kf.x[0, 0])
+        else:
+            kf.predict()
+            betas.append(kf.x[0, 0])
+
+    return pd.Series(betas, index = aligned_data.index)
+
+
 def calculate_rmse(
         beta_df: pd.DataFrame,
         method_col: str,
