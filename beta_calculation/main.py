@@ -130,6 +130,42 @@ def kalman_filter_beta(
     return pd.Series(betas, index = aligned_data.index)
 
 
+def ewma_beta(
+        stock_returns,
+        market_returns,
+        decay_factor: float = 0.94,
+        min_periods: int = 30
+) -> pd.Series:
+    aligned_data = pd.concat([stock_returns, market_returns], axis = 1).dropna()
+    aligned_data.columns = ['stock', 'market']
+
+    betas = []
+    for i in range(len(aligned_data)):
+        if i < min_periods:
+            betas.append(np.nan)
+            continue
+
+        hist_data = aligned_data.iloc[:i + 1]
+
+        n = len(hist_data)
+        weights = np.array([(decay_factor ** (n - 1 - j)) for j in range(n)])
+        weights = weights / weights.sum()
+
+        stock_ret = hist_data['stock'].values
+        market_ret = hist_data['market'].values
+
+        weighted_cov = np.sum(weights * stock_ret * market_ret)
+        weighted_var = np.sum(stock_ret * market_ret ** 2)
+
+        if weighted_var > 1e-8:
+            beta = weighted_cov / weighted_var
+            betas.append(beta)
+        else:
+            betas.append(np.nan)
+
+    return pd.Series(betas, index = aligned_data.index)
+
+
 def calculate_rmse(
         beta_df: pd.DataFrame,
         method_col: str,
