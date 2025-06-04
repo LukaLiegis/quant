@@ -173,6 +173,9 @@ def calculate_rmse(
 ) -> float:
     clean_data = beta_df[[method_col, realized_col]].dropna()
 
+    if len(clean_data) == 0:
+        return np.nan
+
     return np.sqrt(mean_squared_error(clean_data[realized_col], clean_data[method_col]))
 
 
