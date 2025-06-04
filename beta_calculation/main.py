@@ -3,13 +3,8 @@ import pandas as pd
 import yfinance as yf
 from scipy import stats
 import matplotlib.pyplot as plt
-from sklearn.linear_model import Ridge
 from filterpy.kalman import KalmanFilter
 from sklearn.metrics import mean_squared_error
-
-
-def calculate_returns(prices):
-    return (prices / prices.shift(1)).dropna()
 
 
 def calculate_log_returns(prices):
@@ -93,7 +88,7 @@ def calculate_realized_beta(
 def kalman_filter_beta(
         stock_returns,
         market_returns,
-        process_variance: float = 1e-5,
+        process_variance: float = 1e-2,
         observation_variance: float = 1e-2,
 ) -> pd.Series:
     aligned_data = pd.concat([stock_returns, market_returns], axis = 1).dropna()
@@ -134,7 +129,7 @@ def kalman_filter_beta(
 def ewma_beta(
         stock_returns,
         market_returns,
-        decay_factor: float = 0.94,
+        decay_factor: float = 0.98,
         min_periods: int = 30
 ) -> pd.Series:
     aligned_data = pd.concat([stock_returns, market_returns], axis = 1).dropna()
@@ -156,7 +151,7 @@ def ewma_beta(
         market_ret = hist_data['market'].values
 
         weighted_cov = np.sum(weights * stock_ret * market_ret)
-        weighted_var = np.sum(stock_ret * market_ret ** 2)
+        weighted_var = np.sum(weights * market_ret ** 2)
 
         if weighted_var > 1e-8:
             beta = weighted_cov / weighted_var
