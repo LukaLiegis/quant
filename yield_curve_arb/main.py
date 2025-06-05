@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 def load_yield_data(file_path: str = 'combined_curves.csv') -> pd.DataFrame:
@@ -15,14 +16,19 @@ def load_yield_data(file_path: str = 'combined_curves.csv') -> pd.DataFrame:
 def perform_yield_curve_pca(yields_df: pd.DataFrame, n_components: int = 3):
     yield_data = yields_df.values
 
+    scaler = StandardScaler()
+    yield_data_scaled = scaler.fit_transform(yield_data)
+
     pca = PCA(n_components = n_components)
-    principal_components = pca.fit_transform(yield_data)
+    principal_components = pca.fit_transform(yield_data_scaled)
 
     components = pca.components_
 
     explained_variance_ratio = pca.explained_variance_ratio_
 
-    reconstructed = pca.inverse_transform(principal_components)
+    reconstructed_scaled = pca.inverse_transform(principal_components)
+
+    reconstructed = scaler.inverse_transform(reconstructed_scaled)
 
     deviations = yield_data - reconstructed
 
@@ -30,6 +36,7 @@ def perform_yield_curve_pca(yields_df: pd.DataFrame, n_components: int = 3):
 
     return {
         'pca_model': pca,
+        'scaler': scaler,
         'principal_components': principal_components,
         'components': components,
         'explained_variance_ratio': explained_variance_ratio,
