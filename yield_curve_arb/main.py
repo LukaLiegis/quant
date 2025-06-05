@@ -51,7 +51,7 @@ def plot_pca_results(pca_results, yield_df: pd.DataFrame):
     ...
 
 
-def analyze_current_dislocations(pca_results, yield_df: pd.DataFrame):
+def analyze_current_dislocations(pca_results):
     latest_dislocations = pca_results['standard_deviations'][-1]
     tenors = pca_results['tenors']
 
@@ -67,4 +67,4 @@ if __name__ == '__main__':
 
     pca_results = perform_yield_curve_pca(yield_df)
 
-    analyze_current_dislocations(pca_results, yield_df)
+    analyze_current_dislocations(pca_results)
