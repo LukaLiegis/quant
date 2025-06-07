@@ -29,7 +29,7 @@ def compute_dislocation(
         pca_model: PCA,
         scaler: StandardScaler
 ) -> np.ndarray:
-    scaled_current = scaler.transform(yield_data.reshape(-1, 1))
+    scaled_current = scaler.transform(yield_data.reshape(1, -1))
 
     pca_projection = pca_model.transform(scaled_current)
     reconstructed_scaled = pca_model.inverse_transform(pca_projection)
