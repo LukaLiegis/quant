@@ -2,7 +2,7 @@
 
 Each project has a write-up attached.
 
-beta_calculation: A comparison of different ways of calculating beta.
+beta_calculation: A comparison of different ways of calculating beta for a specific asset.
 
 commodities_for_the_long_run: A recreation of an AQR research article by the same name.
 
