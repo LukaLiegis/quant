@@ -44,4 +44,16 @@ def fit_har_model(X, y):
     return model, X_har.columns.tolist()
 
 
+def fit_kernel_ridge_model(X, y, alpha: float = 0.1, gamma: float = 0.05):
+    X_kernel = X[['rv_daily_lag', 'rv_weekly_lag', 'rv_month_lag', 'return_lag']]
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X_kernel)
+
+    model = KernelRidge(alpha=alpha, gamma=gamma, kernel='rbf')
+    model.fit(X_scaled, y)
+
+    return model, scaler, X_kernel.columns.tolist()
+
+
 
