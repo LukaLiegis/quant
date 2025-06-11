@@ -20,5 +20,20 @@ def realized_vol(prices, window: int):
     return rv.dropna()
 
 
+def har_features(rv_daily, returns):
+    df = pd.DataFrame()
+    df['rv_daily'] = rv_daily
+    df['rv_weekly'] = rv_daily.rolling(window=5).mean()
+    df['rv_monthly'] = rv_daily.rolling(window=22).mean()
+
+    df['rv_daily_lag'] = df['rv_daily'].shift(1)
+    df['rv_weekly_lag'] = df['rv_weekly'].shift(1)
+    df['rv_month_lag'] = df['rv_monthly'].shift(1)
+
+    returns_aligned = returns.loc[df.index] if len(returns) > len(df) else returns
+    df['return_lag'] = returns_aligned.shift(1)
+
+    return df.dropna()
+
 
 
