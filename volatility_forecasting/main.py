@@ -36,4 +36,12 @@ def har_features(rv_daily, returns):
     return df.dropna()
 
 
+def fit_har_model(X, y):
+    X_har = X[['rv_daily_lag', 'rv_weekly_lag', 'rv_month_lag']]
+    X_har = sm.add_constant(X_har)
+
+    model = sm.OLS(y, X_har).fit()
+    return model, X_har.columns.tolist()
+
+
 
