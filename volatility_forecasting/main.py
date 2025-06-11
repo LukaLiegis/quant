@@ -56,4 +56,13 @@ def fit_kernel_ridge_model(X, y, alpha: float = 0.1, gamma: float = 0.05):
     return model, scaler, X_kernel.columns.tolist()
 
 
+def fit_garch_model(returns, p=1, q=1):
+    returns_pct = returns * 100
+
+    garch_model = arch_model(returns_pct, vol='GARCH', p=p, q=q)
+    garch_fit = garch_model.fit(disp='off')
+
+    return garch_fit
+
+
 
