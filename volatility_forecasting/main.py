@@ -71,3 +71,7 @@ def plot_volatility_forecast(actual, predictions):
 
 def main():
     ...
+
+
+if __name__ == '__main__':
+    ...
