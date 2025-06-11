@@ -65,4 +65,7 @@ def fit_garch_model(returns, p=1, q=1):
     return garch_fit
 
 
+def plot_volatility_forecast(actual, predictions):
+    ...
+
 
