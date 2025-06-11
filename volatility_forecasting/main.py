@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from arch import arch_model
+import statsmodels.api as sm
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.preprocessing import StandardScaler
 
 
 def get_data():
