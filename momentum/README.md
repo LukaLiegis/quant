@@ -1,6 +1,6 @@
 ## Multi-Asset Momentum Strategy
 
-This is a trend following strategy that has three specific parts
+This strategy implements a systematic time series momentum approach across four major asset classes (equities, bonds, commodities, currencies) based on [this](https://threadreaderapp.com/thread/1587591552691765251.html) twitter thread and the Time series momentum [paper](https://www.sciencedirect.com/science/article/pii/S0304405X11002613).   
 
 ### 1 - Multi-Timeframe Trend
 
