@@ -97,7 +97,17 @@ def plot_volatility_forecasts(actual, predictions):
     plt.show()
 
 
-
+def evaluate_model(y_true, y_pred, model_name):
+    mse = mean_squared_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    mae = np.mean(np.abs(y_true - y_pred))
+    return {
+        'Model': model_name,
+        'MSE': mse,
+        'R²': r2,
+        'MAE': mae,
+        'RMSE': np.sqrt(mse)
+    }
 
 
 def main():
