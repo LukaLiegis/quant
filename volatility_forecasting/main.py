@@ -69,8 +69,35 @@ def fit_garch_model(returns, p=1, q=1):
     return garch_fit
 
 
-def plot_volatility_forecast(actual, predictions):
-    ...
+def plot_volatility_forecasts(actual, predictions):
+    plt.figure(figsize=(15, 8))
+
+    plt.plot(actual.index, actual.values, 'k-', linewidth=2, label='Actual Volatility', alpha=0.8)
+
+    colors = ['red', 'blue', 'green']
+    linestyles = ['--', '-.', ':']
+
+    for i, (model_name, pred_values) in enumerate(predictions.items()):
+        plt.plot(actual.index, pred_values,
+                 color=colors[i], linestyle=linestyles[i], linewidth=2,
+                 label=f'{model_name} Forecast', alpha=0.7)
+
+    plt.title("Volatility Forecasting Comparison", fontsize=16, fontweight='bold')
+    plt.xlabel('Date', fontsize=12)
+    plt.ylabel('Annualized Volatility', fontsize=12)
+    plt.legend(fontsize=11, loc='upper right')
+    plt.grid(True, alpha=0.3)
+
+    ax = plt.gca()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    plt.xticks(rotation=45)
+
+    plt.tight_layout()
+    plt.show()
+
+
+
 
 
 def main():
