@@ -10,4 +10,6 @@ waymo_long: A not so serious approach of trying to go long waymo by removing all
 
 yield_curve_rv: A backtest of a yield curve relative value trading strategy that is based on PCA decomposition. This project is still being worked on.
 
-volatility_forecasting: Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers. 
+volatility_forecasting: Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers.
+
+stock_prediction: A recreation of a [this](https://github.com/borisbanushev/stockpredictionai) github project which was one of the first quant projects I had ever looked at.
