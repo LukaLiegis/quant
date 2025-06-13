@@ -3,8 +3,11 @@ import pandas as pd
 import yfinance as yf
 from arch import arch_model
 import statsmodels.api as sm
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 def get_data():
@@ -13,7 +16,7 @@ def get_data():
     return data
 
 
-def realized_vol(prices, window: int):
+def realized_vol(prices, window: int = 1):
     returns = np.log(prices / prices.shift(1)).dropna()
 
     if window == 1:
@@ -24,7 +27,7 @@ def realized_vol(prices, window: int):
     return rv.dropna()
 
 
-def har_features(rv_daily, returns):
+def create_har_features(rv_daily, returns):
     df = pd.DataFrame()
     df['rv_daily'] = rv_daily
     df['rv_weekly'] = rv_daily.rolling(window=5).mean()
@@ -32,7 +35,7 @@ def har_features(rv_daily, returns):
 
     df['rv_daily_lag'] = df['rv_daily'].shift(1)
     df['rv_weekly_lag'] = df['rv_weekly'].shift(1)
-    df['rv_month_lag'] = df['rv_monthly'].shift(1)
+    df['rv_monthly_lag'] = df['rv_monthly'].shift(1)
 
     returns_aligned = returns.loc[df.index] if len(returns) > len(df) else returns
     df['return_lag'] = returns_aligned.shift(1)
@@ -41,7 +44,7 @@ def har_features(rv_daily, returns):
 
 
 def fit_har_model(X, y):
-    X_har = X[['rv_daily_lag', 'rv_weekly_lag', 'rv_month_lag']]
+    X_har = X[['rv_daily_lag', 'rv_weekly_lag', 'rv_monthly_lag']]
     X_har = sm.add_constant(X_har)
 
     model = sm.OLS(y, X_har).fit()
@@ -49,7 +52,7 @@ def fit_har_model(X, y):
 
 
 def fit_kernel_ridge_model(X, y, alpha: float = 0.1, gamma: float = 0.05):
-    X_kernel = X[['rv_daily_lag', 'rv_weekly_lag', 'rv_month_lag', 'return_lag']]
+    X_kernel = X[['rv_daily_lag', 'rv_weekly_lag', 'rv_monthly_lag', 'return_lag']]
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X_kernel)
@@ -111,8 +114,97 @@ def evaluate_model(y_true, y_pred, model_name):
 
 
 def main():
-    ...
+    prices = get_data()
+
+    rv_daily = realized_vol(prices)
+
+    returns = np.log(prices / prices.shift(1)).dropna()
+
+    print(f"Calculated volatility for {len(rv_daily)} observations")
+
+    har_features = create_har_features(rv_daily, returns)
+
+    returns_aligned = returns.loc[har_features.index]
+
+    print(f"HAR features shape: {har_features.shape}")
+
+    y = har_features['rv_daily'].shift(-1).dropna()
+    X = har_features.iloc[:-1]
+    returns_garch = returns_aligned.iloc[:-1]
+
+    split_idx = int(0.8 * len(X))
+    X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
+    y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
+    returns_train = returns_garch.iloc[:split_idx]
+    returns_test = returns_garch.iloc[split_idx:]
+
+    print(f"\nTrain set: {len(X_train)} observations")
+    print(f"Test set: {len(X_test)} observations")
+
+    results = []
+    predictions = {}
+
+    har_model, har_features_used = fit_har_model(X_train, y_train)
+    print(f"HAR Model Summary:")
+    print(f"R²: {har_model.rsquared:.4f}")
+    print(f"Features: {har_features_used}")
+
+    X_test_har = X_test[['rv_daily_lag', 'rv_weekly_lag', 'rv_monthly_lag']]
+    X_test_har = sm.add_constant(X_test_har)
+    y_pred_har = har_model.predict(X_test_har)
+    predictions['HAR'] = y_pred_har
+
+    har_results = evaluate_model(y_test, y_pred_har, 'HAR')
+    results.append(har_results)
+
+    kernel_model, scaler, kernel_features_used = fit_kernel_ridge_model(X_train, y_train)
+    print(f"Kernel Ridge features: {kernel_features_used}")
+
+    X_test_kernel = X_test[kernel_features_used]
+    X_test_kernel_scaled = scaler.transform(X_test_kernel)
+    y_pred_kernel = kernel_model.predict(X_test_kernel_scaled)
+    predictions['Kernel Ridge'] = y_pred_kernel
+
+    kernel_results = evaluate_model(y_test, y_pred_kernel, 'Kernel Ridge')
+    results.append(kernel_results)
+
+    garch_fit = fit_garch_model(returns_train)
+    print(f"GARCH Model fitted successfully")
+
+    garch_forecasts = garch_fit.forecast(horizon=len(returns_test), reindex=False)
+    y_pred_garch = np.sqrt(garch_forecasts.variance.values[-1, :]) / 100 * np.sqrt(252)  # Convert back to annualized
+    predictions['GARCH'] = y_pred_garch
+
+    garch_results = evaluate_model(y_test, y_pred_garch, 'GARCH')
+    results.append(garch_results)
+
+    results_df = pd.DataFrame(results)
+    print(results_df.to_string(index=False, float_format='%.6f'))
+
+    best_mse_idx = results_df['MSE'].idxmin()
+    best_mse_model = results_df.loc[best_mse_idx, 'Model']
+    print(f"Best MSE: {best_mse_model} ({results_df.loc[best_mse_idx, 'MSE']:.6f})")
+
+    best_r2_idx = results_df['R²'].idxmax()
+    best_r2_model = results_df.loc[best_r2_idx, 'Model']
+    print(f"Best R²: {best_r2_model} ({results_df.loc[best_r2_idx, 'R²']:.6f})")
+
+    pred_df = pd.DataFrame(predictions, index=y_test.index)
+    pred_corr = pred_df.corr()
+    print(f"\nCorrelation between model predictions:")
+    print(pred_corr.round(4))
+
+    print(f"\nActual volatility statistics:")
+    print(f"Mean: {y_test.mean():.4f}")
+    print(f"Std: {y_test.std():.4f}")
+    print(f"Min: {y_test.min():.4f}")
+    print(f"Max: {y_test.max():.4f}")
+
+    print(f"\nGenerating volatility forecast comparison plot...")
+    plot_volatility_forecasts(y_test, predictions)
+
+    return results_df, predictions, y_test
 
 
 if __name__ == '__main__':
-    ...
+    results_df, predictions, actual_volatility = main()
