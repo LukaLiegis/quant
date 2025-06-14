@@ -73,19 +73,32 @@ def fit_garch_model(returns, p=1, q=1):
 
 
 def plot_volatility_forecasts(actual, predictions):
+    end_date = actual.index.max()
+    start_date = end_date - pd.DateOffset(years=1)
+
+    actual_filtered = actual[actual.index >= start_date]
+
+    predictions_filtered = {}
+    for model_name, pred_values in predictions.items():
+        if isinstance(pred_values, np.ndarray):
+            pred_series = pd.Series(pred_values, index=actual.index)
+        else:
+            pred_series = pred_values
+        predictions_filtered[model_name] = pred_series[pred_series.index >= start_date]
+
     plt.figure(figsize=(15, 8))
 
-    plt.plot(actual.index, actual.values, 'k-', linewidth=2, label='Actual Volatility', alpha=0.8)
+    plt.plot(actual_filtered.index, actual_filtered.values, 'k-', linewidth=2, label='Actual Volatility', alpha=0.8)
 
     colors = ['red', 'blue', 'green']
     linestyles = ['--', '-.', ':']
 
-    for i, (model_name, pred_values) in enumerate(predictions.items()):
-        plt.plot(actual.index, pred_values,
+    for i, (model_name, pred_values) in enumerate(predictions_filtered.items()):
+        plt.plot(pred_values.index, pred_values.values,
                  color=colors[i], linestyle=linestyles[i], linewidth=2,
                  label=f'{model_name} Forecast', alpha=0.7)
 
-    plt.title("Volatility Forecasting Comparison", fontsize=16, fontweight='bold')
+    plt.title("Volatility Forecasting Comparison (Last 2 Years)", fontsize=16, fontweight='bold')
     plt.xlabel('Date', fontsize=12)
     plt.ylabel('Annualized Volatility', fontsize=12)
     plt.legend(fontsize=11, loc='upper right')
@@ -93,7 +106,7 @@ def plot_volatility_forecasts(actual, predictions):
 
     ax = plt.gca()
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
     plt.xticks(rotation=45)
 
     plt.tight_layout()
