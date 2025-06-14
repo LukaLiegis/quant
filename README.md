@@ -4,7 +4,7 @@ I learn best by doing rather than just be reading and I want to learn everything
 
 beta_calculation: A comparison of different ways of calculating beta for a specific asset.
 
-momentum: A backtest of a momentum strategy based on multiple asset classes.
+momentum: A systematic time series momentum strategy with volatility adjusted position sizing across all asset classes. 
 
 waymo_long: A not so serious approach of trying to go long waymo by removing all of Google's other businesses from its stock price.
 
