@@ -28,20 +28,25 @@ Performance Results
 
 Period: Max available data for each ETF (varies by instrument)
 
-- Total Return: 1,989%
-- Annualized Return: 10.53%
+- Total Return: 2,008%
+- Annualized Return: 11.21%
 - Annual Volatility: 18.85%
-- Sharpe Ratio: 0.56
+- Sharpe Ratio: 0.59
 - Maximum Drawdown: -36.7%
-- Hit Rate: 50.7%
 
 ### 5 - Performance
 
 ![Results](myplot.png)
 
-Now to 
+Now to look at an attribution method that I saw on [@quantymacro](https://x.com/quantymacro)'s blog which came from [@macrocephalopod](https://x.com/macrocephalopod). The idea is to create a tilt strategy using rolling 1-year average positions for each asset, capturing the structural/directional bias of the strategy and a timing strategy where the residual between actual positions and tilt positions, capturing tactical moves around average positioning. 
 
 ![decomposition_results](myplot2.png)
+
+```angular2html
+Actual Strategy Sharpe:    0.59
+Tilt Strategy Sharpe:      0.52
+Timing Strategy Sharpe:    0.22
+```
 
 ### 6 - What Went Wrong/Could Be Improved
 
