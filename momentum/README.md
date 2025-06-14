@@ -39,6 +39,10 @@ Period: Max available data for each ETF (varies by instrument)
 
 ![Results](myplot.png)
 
+Now to 
+
+![decomposition_results](myplot2.png)
+
 ### 6 - What Went Wrong/Could Be Improved
 
 The -36.7% maximum drawdown suggests the risk targeting mechanism was insufficient during stress periods. The 60-day lookback may be too slow to react to regime changes, and the 0.5x minimum scaling factor may be too high. This could be improved by implementing faster volatility estimators (e.g., GARCH models).
