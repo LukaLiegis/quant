@@ -26,7 +26,11 @@ Features:
 
 ### 3 - GARCH(1,1) (Traditional Benchmark)
 
-Standard industry benchmark for volatility modeling, providing baseline comparison for both linear and nonlinear approaches.
+I include the industry-standard GARCH(1,1) model as a baseline:
+
+$$\sigma^2_t=\omega+\alpha\epsilon^2_{t-1}+\beta\sigma^2_{t-1}$$
+
+This serves as a natural benchmark given its widespread adoption in risk management and its theoretical foundation in the conditional heteroskedasticity literature.
 
 ### Results
 
