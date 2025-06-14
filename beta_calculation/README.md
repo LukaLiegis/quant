@@ -24,6 +24,8 @@ Forward-looking calculation using the subsequent 126 trading days. This isn't pr
 
 ### Results
 
+![result](myplot.png)
+
 The RMSE values comparing each method against forward-realized beta:
 ```
 OLS RMSE: 0.386
