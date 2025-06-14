@@ -11,7 +11,7 @@ There are three hedging approaches applied:
 
 This approach models Google's returns as a linear combination of advertising and tech sector proxies.
 
-$R_{GOOGL,t}=\alpha+\beta_1 R_{META,t} + \beta_2 R_{XLC,t} + \beta_3 R_{AMZN,t} + \beta_4 R_{NFLX,t} + \beta_5 R_{QQQ,t} + \varepsilon_t$
+$$R_{GOOGL,t}=\alpha+\beta_1 R_{META,t} + \beta_2 R_{XLC,t} + \beta_3 R_{AMZN,t} + \beta_4 R_{NFLX,t} + \beta_5 R_{QQQ,t} + \varepsilon_t$$
 
 The primary method of this method is the interpretability since each hedge ratio directly corresponds to a different business exposure that needs to be removed. The main drawback is the assumption of linearity between Google and the factor exposures which may break down.
 
@@ -19,15 +19,15 @@ The primary method of this method is the interpretability since each hedge ratio
 
 This method first extracts the dominant patterns of co-movement among advertising/technology stocks, then hedges Google's exposure to these systematic factors.
 
-$X_{scaled} = \frac{X - \mu}{\sigma}$
+$$X_{scaled} = \frac{X - \mu}{\sigma}$$
 
-$\Sigma = \frac{X^TX}{n-1} = P\Lambda P^T \quad \text{(eigendecomposition)}$
+$$\Sigma = \frac{X^TX}{n-1} = P\Lambda P^T \quad \text{(eigendecomposition)}$$
 
-$PC_t = X_{scaled,t} \times P \quad \text{(principal components)}$
+$$PC_t = X_{scaled,t} \times P \quad \text{(principal components)}$$
 
-$R_{GOOGL,t} = \alpha + \gamma_1 PC_{1,t} + \gamma_2 PC_{2,t} + \gamma_3 PC_{3,t} + \varepsilon_t$
+$$R_{GOOGL,t} = \alpha + \gamma_1 PC_{1,t} + \gamma_2 PC_{2,t} + \gamma_3 PC_{3,t} + \varepsilon_t$$
 
-$\text{hedge_weights} = -P \times \hat{\gamma} \quad \text{(back-transform to asset weights)}$
+$$\text{hedge_weights} = -P \times \hat{\gamma} \quad \text{(back-transform to asset weights)}$$
 
 The main drawback of this method is the sacrifice of interpretability since the principal components are abstract linear combinations rather than economically meaningful factors. 
 
@@ -37,11 +37,11 @@ This approach uses a rolling window approach, the hedge ratio adapts to recent c
 
 For each time series $t$, using a window of $w=252$
 
-$\beta_t = \frac{\text{Cov}(R_{GOOGL}, R_{hedge}){t-w:t}}{\text{Var}(R{hedge})_{t-w:t}}$
+$$\beta_t = \frac{\text{Cov}(R_{GOOGL}, R_{hedge}){t-w:t}}{\text{Var}(R{hedge})_{t-w:t}}$$
 
-$\text{hedge_ratio}_t = -\beta_t$
+$$\text{hedge_ratio}_t = -\beta_t$$
 
-$R_{hedged,t} = R_{GOOGL,t} + \text{hedge_ratio}t \times R_{hedge,t}$
+$$R_{hedged,t} = R_{GOOGL,t} + \text{hedge_ratio}t \times R_{hedge,t}$$
 
 The time-varying approach adapts to changing market conditions and can capture structural breaks in the relationship between Google and its sector exposures. This flexibility comes at the cost of increased model complexity and higher transaction costs due to more frequent rebalancing requirements.
 
