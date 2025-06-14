@@ -15,7 +15,9 @@ A not so serious approach of trying to decompose Google's stock price and go lon
 Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers. A single way is used to calculate volatility and the methods are compared to a standard GARCH model to see how each model's forecasting ability differs.
 
 ### yield_curve_rv 
-A backtest of a yield curve relative value trading strategy that is based on PCA decomposition. This project is still being worked on.
+A backtest of a yield curve relative value trading strategy that is based on PCA decomposition of the yield curve.
 
 ### stock_prediction 
-A recreation of a [this](https://github.com/borisbanushev/stockpredictionai) github project which was one of the first quant projects I had ever looked at.
+A recreation of [this](https://github.com/borisbanushev/stockpredictionai) github project which was one of the first quant projects I had ever looked at.
+
+The script uses a variational autoencoder to create features from the returns dataset, and then a Wasserstein GAN to forecast day ahead returns. Bayesian optimisation is used to tune the GAN's hyperparameters.
