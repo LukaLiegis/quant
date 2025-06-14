@@ -27,7 +27,7 @@ $$PC_t = X_{scaled,t} \times P \quad \text{(principal components)}$$
 
 $$R_{GOOGL,t} = \alpha + \gamma_1 PC_{1,t} + \gamma_2 PC_{2,t} + \gamma_3 PC_{3,t} + \varepsilon_t$$
 
-$$\text{hedge_weights} = -P \times \hat{\gamma} \quad \text{(back-transform to asset weights)}$$
+$$\text{hedge weights} = -P \times \hat{\gamma} \quad \text{(back-transform to asset weights)}$$
 
 The main drawback of this method is the sacrifice of interpretability since the principal components are abstract linear combinations rather than economically meaningful factors. 
 
