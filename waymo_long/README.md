@@ -39,7 +39,7 @@ For each time series $t$, using a window of $w=252$
 
 $$\beta_t = \frac{\text{Cov}(R_{GOOGL}, R_{hedge}){t-w:t}}{\text{Var}(R{hedge})_{t-w:t}}$$
 
-$$\text{hedge_ratio}_t = -\beta_t$$
+$$\text{hedge ratio}_t = -\beta_t$$
 
 $$R_{hedged,t} = R_{GOOGL,t} + \text{hedge ratio}t \times R_{hedge,t}$$
 
