@@ -41,7 +41,7 @@ $$\beta_t = \frac{\text{Cov}(R_{GOOGL}, R_{hedge}){t-w:t}}{\text{Var}(R{hedge})_
 
 $$\text{hedge_ratio}_t = -\beta_t$$
 
-$$R_{hedged,t} = R_{GOOGL,t} + \text{hedge_ratio}t \times R_{hedge,t}$$
+$$R_{hedged,t} = R_{GOOGL,t} + \text{hedge ratio}t \times R_{hedge,t}$$
 
 The time-varying approach adapts to changing market conditions and can capture structural breaks in the relationship between Google and its sector exposures. This flexibility comes at the cost of increased model complexity and higher transaction costs due to more frequent rebalancing requirements.
 
