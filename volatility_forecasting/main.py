@@ -98,7 +98,7 @@ def plot_volatility_forecasts(actual, predictions):
                  color=colors[i], linestyle=linestyles[i], linewidth=2,
                  label=f'{model_name} Forecast', alpha=0.7)
 
-    plt.title("Volatility Forecasting Comparison (Last 2 Years)", fontsize=16, fontweight='bold')
+    plt.title("Volatility Forecasting Comparison (Last Year)", fontsize=16, fontweight='bold')
     plt.xlabel('Date', fontsize=12)
     plt.ylabel('Annualized Volatility', fontsize=12)
     plt.legend(fontsize=11, loc='upper right')
