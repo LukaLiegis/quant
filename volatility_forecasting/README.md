@@ -34,6 +34,8 @@ This serves as a natural benchmark given its widespread adoption in risk managem
 
 ### Results
 
+![result](myplot.png)
+
 ```
 Model             MSE          R²        MAE        RMSE
 HAR             0.014884    0.287866   0.080546   0.122002
