@@ -42,7 +42,7 @@ Now to look at an attribution method that I saw on [@quantymacro](https://x.com/
 
 ![decomposition_results](myplot2.png)
 
-```angular2html
+```
 Actual Strategy Sharpe:    0.59
 Tilt Strategy Sharpe:      0.52
 Timing Strategy Sharpe:    0.22
