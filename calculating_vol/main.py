@@ -102,6 +102,8 @@ def plot(df: pd.DataFrame, vix: pd.Series) -> None:
     plt.plot(df_filtered['rogers_satchell_vol'], label="Rogers-Satchell Volatility")
     plt.plot(df_filtered['yang_zhang_vol'], label="Yang-Zhang Volatility")
     plt.title("SPY Volatility Calculations Compared to VIX")
+    plt.ylabel("Volatility (%)")
+    plt.xlabel("Date")
     plt.grid(True)
     plt.legend()
     plt.show()
