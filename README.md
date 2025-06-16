@@ -15,7 +15,7 @@ A not so serious approach of trying to decompose Google's stock price and go lon
 
 ### calculating_vol
 
-Implementing the six different methods of calculating volatility.
+Implementing the six different methods of calculating volatility for SPY and comparing this to the VIX index.
 
 ### volatility_forecasting
 Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers. A single way is used to calculate volatility and the methods are compared to a standard GARCH model to see how each model's forecasting ability differs.
