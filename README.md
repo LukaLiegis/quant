@@ -5,11 +5,17 @@ I learn best by doing rather than just be reading and I want to learn everything
 ### beta_calculation
 A comparison of multiple research papers on ways of calculating an asset's beta. 
 
+The methods are compared by using 
+
 ### momentum
 A systematic time series momentum strategy with volatility adjusted position sizing across all asset classes. 
 
 ### waymo_long
 A not so serious approach of trying to decompose Google's stock price and go long waymo by removing all of Google's other businesses from its stock price.
+
+### calculating_vol
+
+Implementing the six different methods of calculating volatility.
 
 ### volatility_forecasting
 Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers. A single way is used to calculate volatility and the methods are compared to a standard GARCH model to see how each model's forecasting ability differs.
