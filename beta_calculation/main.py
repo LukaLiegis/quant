@@ -175,10 +175,10 @@ def calculate_rmse(
     return np.sqrt(mean_squared_error(clean_data[realized_col], clean_data[method_col]))
 
 
-def plot_rolling_betas(beta_df):
+def plot_rolling_betas(beta_df, plot_years: int = 5):
     methods_to_plot = ['OLS_Beta', 'Kalman_Beta', 'EWMA_Beta', 'Realized_Beta']
 
-    ten_years_ago = pd.Timestamp.now() - pd.DateOffset(years = 10)
+    ten_years_ago = pd.Timestamp.now() - pd.DateOffset(years = plot_years)
     recent_data = beta_df.loc[beta_df.index >= ten_years_ago]
 
     fig, ax = plt.subplots(figsize = (16, 10))
@@ -196,7 +196,7 @@ def plot_rolling_betas(beta_df):
                 alpha=0.8
             )
 
-    ax.set_title('Beta Estimates Comparison (Last 10 Years)', fontsize=14)
+    ax.set_title(f'Beta Estimates Comparison (Last {plot_years} Years)', fontsize=14)
     ax.set_xlabel('Date')
     ax.set_ylabel('Beta')
     ax.legend(loc='best')
