@@ -5,7 +5,7 @@ I learn best by doing rather than just be reading and I want to learn everything
 ### beta_calculation
 A comparison of multiple research papers on ways of calculating an asset's beta. 
 
-The methods are compared by using 
+The methods are compared by using RMSE.
 
 ### momentum
 A systematic time series momentum strategy with volatility adjusted position sizing across all asset classes. 
