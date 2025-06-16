@@ -82,27 +82,19 @@ def yang_zhang_volatility(
     return np.sqrt(rolling_variance * 252) * 100
 
 
+def calculate_measures(data: pd.DataFrame, vix_data: pd.Series) -> pd.DataFrame:
+    if isinstance(vix_data, pd.DataFrame):
+        vix_data = vix_data.iloc[:, 0]
 
-def calculate_measures(data: pd.DataFrame, vix_data: pd.Series):
-    vix_aligned = vix_data.reindex(data.index)
+    vix_aligned = vix_data.reindex(data.index, method='ffill')
     premiums = pd.DataFrame(index=data.index)
 
-    premiums['close_to_close_premium'] = data['close_to_close_vol'] - vix_aligned
-    premiums['ewma_premium'] = data['ewma_volatility'] - vix_aligned
-    premiums['parkinson_premium'] = data['parkinson_vol'] - vix_aligned
-    premiums['garman_klass_premium'] = data['garman_klass_vol'] - vix_aligned
-    premiums['rogers_satchell_premium'] = data['rogers_satchell_vol'] - vix_aligned
-    premiums['yang_zhang_premium'] = data['yang_zhang_vol'] - vix_aligned
-    premiums['vix'] = vix_aligned
-
-    premium_cols = [col for col in premiums.columns if 'premium' in col]
-
-    summary_stats = pd.DataFrame({
-        'mean': premiums[premium_cols].mean(),
-        'std': premiums[premium_cols].std(),
-    }).round(2)
-
-    print(summary_stats)
+    premiums['close_to_close_premium'] = data['close_to_close_vol'].values - vix_aligned.values
+    premiums['ewma_premium'] = data['ewma_volatility'].values - vix_aligned.values
+    premiums['parkinson_premium'] = data['parkinson_vol'].values - vix_aligned.values
+    premiums['garman_klass_premium'] = data['garman_klass_vol'].values - vix_aligned.values
+    premiums['rogers_satchell_premium'] = data['rogers_satchell_vol'].values - vix_aligned.values
+    premiums['yang_zhang_premium'] = data['yang_zhang_vol'].values - vix_aligned.values
 
     return premiums
 
@@ -139,9 +131,8 @@ def main():
     data['rogers_satchell_vol'] = rogers_satchell_volatility(data['Open'], data['High'], data['Low'], data['Close'])
     data['yang_zhang_vol'] = yang_zhang_volatility(data['Open'], data['High'], data['Low'], data['Close'])
     plot(data, vix_data)
-    calculate_measures(data, vix_data)
-    #print(data)
-    #print(vix_data)
+    premiums = calculate_measures(data, vix_data)
+    print(premiums.tail(252).describe())
 
 
 if __name__ == "__main__":
