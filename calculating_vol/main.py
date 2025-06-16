@@ -83,8 +83,28 @@ def yang_zhang_volatility(
 
 
 
-def calculate_measures(data, vix_data):
-    ...
+def calculate_measures(data: pd.DataFrame, vix_data: pd.Series):
+    vix_aligned = vix_data.reindex(data.index)
+    premiums = pd.DataFrame(index=data.index)
+
+    premiums['close_to_close_premium'] = data['close_to_close_vol'] - vix_aligned
+    premiums['ewma_premium'] = data['ewma_volatility'] - vix_aligned
+    premiums['parkinson_premium'] = data['parkinson_vol'] - vix_aligned
+    premiums['garman_klass_premium'] = data['garman_klass_vol'] - vix_aligned
+    premiums['rogers_satchell_premium'] = data['rogers_satchell_vol'] - vix_aligned
+    premiums['yang_zhang_premium'] = data['yang_zhang_vol'] - vix_aligned
+    premiums['vix'] = vix_aligned
+
+    premium_cols = [col for col in premiums.columns if 'premium' in col]
+
+    summary_stats = pd.DataFrame({
+        'mean': premiums[premium_cols].mean(),
+        'std': premiums[premium_cols].std(),
+    }).round(2)
+
+    print(summary_stats)
+
+    return premiums
 
 
 def plot(df: pd.DataFrame, vix: pd.Series) -> None:
