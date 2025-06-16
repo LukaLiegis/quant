@@ -139,6 +139,7 @@ def main():
     data['rogers_satchell_vol'] = rogers_satchell_volatility(data['Open'], data['High'], data['Low'], data['Close'])
     data['yang_zhang_vol'] = yang_zhang_volatility(data['Open'], data['High'], data['Low'], data['Close'])
     plot(data, vix_data)
+    calculate_measures(data, vix_data)
     #print(data)
     #print(vix_data)
 
