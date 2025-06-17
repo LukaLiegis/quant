@@ -17,3 +17,5 @@ The reason that I have also plotted the VIX is because I was interested in seein
        Garman-Klass  49.79  49.79  33.83  6.30  0.24         0.90      0.0   
           Parkinson  50.38  50.38  33.84  6.31  0.23         0.90      0.0 
 ```
+
+![regression_plot](myplot2.png)

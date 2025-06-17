@@ -164,6 +164,30 @@ def plot(df: pd.DataFrame, vix: pd.Series) -> None:
     plt.show()
 
 
+def plot_scatter(ewma_vol: pd.Series, vix_data: pd.Series) -> None:
+    if isinstance(vix_data, pd.DataFrame):
+        vix_data = vix_data.iloc[:, 0]
+
+    vix_aligned = vix_data.reindex(ewma_vol.index, method='ffill')
+    mask = ~(np.isnan(ewma_vol) | np.isnan(vix_aligned))
+
+    if mask.sum() == 0:
+        print("No valid data points for scatter plot")
+        return
+
+    x_data = ewma_vol[mask].values
+    y_data = vix_aligned[mask].values
+
+    plt.figure(figsize=(10, 8))
+    plt.scatter(x_data, y_data, alpha=0.6, s=20, color='blue', label='Data Points')
+    plt.xlabel('EWMA Volatility (%)')
+    plt.ylabel('VIX (%)')
+    plt.title('EWMA Volatility vs VIX Scatter Plot')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+
 def main():
     data = get_spy_data()
     vix_data = get_vix_data()
@@ -174,6 +198,7 @@ def main():
     data['rogers_satchell_vol'] = rogers_satchell_volatility(data['Open'], data['High'], data['Low'], data['Close'])
     data['yang_zhang_vol'] = yang_zhang_volatility(data['Open'], data['High'], data['Low'], data['Close'])
     plot(data, vix_data)
+    plot_scatter(data['ewma_volatility'], vix_data)
 
     performance_metrics = calculate_measures(data, vix_data)
 
