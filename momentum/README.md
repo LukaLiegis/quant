@@ -33,6 +33,7 @@ Period: Max available data for each ETF (varies by instrument)
 - Annual Volatility: 18.85%
 - Sharpe Ratio: 0.59
 - Maximum Drawdown: -36.7%
+- P-Value < 0.01
 
 ### 5 - Performance
 
@@ -43,9 +44,9 @@ Now to look at an attribution method that I saw on [@quantymacro](https://x.com/
 ![decomposition_results](myplot2.png)
 
 ```
-Actual Strategy Sharpe:    0.59
-Tilt Strategy Sharpe:      0.52
-Timing Strategy Sharpe:    0.22
+Actual Strategy Sharpe:    0.60 (p=0.0000)
+Tilt Strategy Sharpe:      0.52 (p=0.0000)
+Timing Strategy Sharpe:    0.22 (p=0.0000)
 ```
 
 ### 6 - What Went Wrong/Could Be Improved

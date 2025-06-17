@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from typing import Dict, Optional
+from scipy import stats
 import matplotlib.pyplot as plt
+from typing import Dict, Optional
 
 UNIVERSE = {
     'equities': ['SPY', 'QQQ', 'EFA', 'EEM', 'IWM'],
@@ -226,12 +227,20 @@ def calculate_performance_metrics(returns: pd.Series) -> Dict[str, float]:
     drawdown = (cumulative - rolling_max) / rolling_max
     max_drawdown = drawdown.min()
 
+    n_obs = len(returns)
+    t_stat, mean_return_pvalue = stats.ttest_1samp(returns, 0)
+    sharpe_tstat = sharpe_ratio * np.sqrt(n_obs)
+    sharpe_pvalue = 2 * (1 - stats.norm.cdf(abs(sharpe_tstat)))
+
     return {
         'total_return': total_return,
         'annual_return': annual_return,
         'annual_volatility': annual_vol,
         'sharpe_ratio': sharpe_ratio,
-        'max_drawdown': max_drawdown
+        'max_drawdown': max_drawdown,
+        'mean_return_pvalue': mean_return_pvalue,
+        'sharpe_pvalue': sharpe_pvalue,
+        'n_observations': n_obs,
     }
 
 
@@ -278,8 +287,9 @@ def print_attribution_summary(attribution_results: Dict[str, pd.Series]) -> None
     strategies = ['actual', 'tilt', 'timing']
     metrics_data = []
 
-    print(f"\n{'Strategy':<12} {'Total Ret':<10} {'Ann Ret':<10} {'Ann Vol':<10} {'Sharpe':<8} {'Max DD':<10}")
-    print("-" * 70)
+    print(
+        f"\n{'Strategy':<12} {'Total Ret':<10} {'Ann Ret':<10} {'Ann Vol':<10} {'Sharpe':<8} {'Max DD':<10} {'P-Value':<10}")
+    print("-" * 85)
 
     for strategy in strategies:
         returns = attribution_results[strategy]
@@ -287,22 +297,23 @@ def print_attribution_summary(attribution_results: Dict[str, pd.Series]) -> None
         metrics_data.append(metrics)
 
         print(
-            f"{strategy.title():<12} {metrics['total_return']:>8.2%} {metrics['annual_return']:>8.2%} {metrics['annual_volatility']:>8.2%} {metrics['sharpe_ratio']:>6.2f} {metrics['max_drawdown']:>8.2%}")
+            f"{strategy.title():<12} {metrics['total_return']:>8.2%} {metrics['annual_return']:>8.2%} {metrics['annual_volatility']:>8.2%} {metrics['sharpe_ratio']:>6.2f} {metrics['max_drawdown']:>8.2%} {metrics['sharpe_pvalue']:>8.4f}")
 
     combined_returns = attribution_results['tilt'] + attribution_results['timing']
     correlation = np.corrcoef(attribution_results['actual'], combined_returns)[0, 1]
     mean_diff = np.abs(attribution_results['actual'] - combined_returns).mean()
 
-    print(f"Actual vs (Tilt + Timing) correlation: {correlation:.6f}")
+    print(f"\nActual vs (Tilt + Timing) correlation: {correlation:.6f}")
     print(f"Mean absolute difference: {mean_diff:.8f}")
 
     timing_mean = attribution_results['timing'].mean()
     print(f"Timing strategy mean return: {timing_mean:.8f}")
     print(f"(Should be close to zero: {abs(timing_mean) < 1e-6})")
 
-    print(f"Actual Strategy Sharpe:  {metrics_data[0]['sharpe_ratio']:6.2f}")
-    print(f"Tilt Strategy Sharpe:    {metrics_data[1]['sharpe_ratio']:6.2f}")
-    print(f"Timing Strategy Sharpe:  {metrics_data[2]['sharpe_ratio']:6.2f}")
+    print(
+        f"\nActual Strategy Sharpe:  {metrics_data[0]['sharpe_ratio']:6.2f} (p={metrics_data[0]['sharpe_pvalue']:.4f})")
+    print(f"Tilt Strategy Sharpe:    {metrics_data[1]['sharpe_ratio']:6.2f} (p={metrics_data[1]['sharpe_pvalue']:.4f})")
+    print(f"Timing Strategy Sharpe:  {metrics_data[2]['sharpe_ratio']:6.2f} (p={metrics_data[2]['sharpe_pvalue']:.4f})")
 
 
 def main():
