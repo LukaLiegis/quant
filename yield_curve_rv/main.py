@@ -21,16 +21,22 @@ def load_and_prepare_data():
 
 
 def compute_yield_changes(
-        yields
+        yields: pd.DataFrame,
 ):
     yield_changes = yields.diff().dropna()
-
     yield_changes = yield_changes.dropna()
 
-    print(f"Number of observations: {len(yield_changes)}")
-    print(f"Date range: {yield_changes.index[0]} to {yield_changes.index[-1]}")
-
     return yield_changes
+
+
+def validate_data(
+        yields,
+        maturity_labels,
+):
+    missing_pct = yields.isnull().sum() / len(yields) * 100
+    for label, pct in zip(maturity_labels, missing_pct):
+        if pct > 0:
+            print(f"{label}: {pct:.1f}% missing")
 
 
 def perform_pca_analysis(
