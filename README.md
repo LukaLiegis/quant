@@ -21,7 +21,7 @@ Implementing the six different methods of calculating volatility for SPY and com
 Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers. A single way is used to calculate volatility and the methods are compared to a standard GARCH model to see how each model's forecasting ability differs.
 
 ### yield_curve_rv 
-A backtest of a yield curve relative value trading strategy that is based on PCA decomposition of the yield curve.
+This project initially started as a recreation of Salomon Smith Barney's paper by the name Principles of Principal Components which aims to decompose the yield curve into level slope and curvature.
 
 ### stock_prediction 
 A recreation of [this](https://github.com/borisbanushev/stockpredictionai) github project which was one of the first quant projects I had ever looked at.
