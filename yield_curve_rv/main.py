@@ -1,206 +1,181 @@
+import pandas as pd
 import numpy as np
-import polars as pl
-from typing import Tuple, Dict
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+import seaborn as sns
 
 
-def load_yield_data() -> pl.DataFrame:
-    df = pl.read_csv("combined_curves.csv")
-    df = df.with_columns(
-        pl.col('observation_date').str.to_date()
-    ).sort("observation_date")
-    df = df.drop_nulls()
-    return df
+def load_and_prepare_data():
+    df = pd.read_csv('combined_curves.csv')
+    df['observation_date'] = pd.to_datetime(df['observation_date'])
+
+    yield_columns = ['DGS1MO', 'DGS3MO', 'DGS6MO', 'DGS1', 'DGS2', 'DGS3',
+                     'DGS5', 'DGS7', 'DGS10', 'DGS20', 'DGS30']
+
+    yields = df[yield_columns].apply(pd.to_numeric, errors='coerce')
+
+    maturity_labels = ['1M', '3M', '6M', '1Y', '2Y', '3Y', '5Y', '7Y', '10Y', '20Y', '30Y']
+    maturity_years = [1 / 12, 3 / 12, 6 / 12, 1, 2, 3, 5, 7, 10, 20, 30]
+
+    return df, yields, yield_columns, maturity_labels, maturity_years
 
 
-def calculate_yield_changes(
-        df: pl.DataFrame
-) -> pl.DataFrame:
-    yield_columns = [col for col in df.columns if col.startswith("DGS")]
+def compute_yield_changes(
+        yields
+):
+    yield_changes = yields.diff().dropna()
 
-    changes_df = df.select([
-        pl.col('observation_date'),
-        *[pl.col(col).diff().alias(f'{col}_change') for col in yield_columns]
-    ]).drop_nulls()
+    yield_changes = yield_changes.dropna()
 
-    return changes_df
+    print(f"Number of observations: {len(yield_changes)}")
+    print(f"Date range: {yield_changes.index[0]} to {yield_changes.index[-1]}")
 
-
-def perform_pca(
-        changes_df: pl.DataFrame
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    change_columns = [col for col in changes_df.columns if col.endswith("_change")]
-
-    yield_changes_matrix = changes_df.select(change_columns).to_numpy()
-
-    mask = ~np.isnan(yield_changes_matrix).any(axis=1)
-    yield_changes_matrix = yield_changes_matrix[mask]
-
-    print(f'Data shape: {yield_changes_matrix.shape}')
-    print(f'Number of observations: {yield_changes_matrix.shape[0]}')
-    print(f'Number of point: {yield_changes_matrix.shape[1]}')
-
-    cov_matrix = np.cov(yield_changes_matrix.T)
-
-    eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
-
-    idx = np.argsort(eigenvalues)[::-1]
-    eigenvalues = eigenvalues[idx]
-    eigenvectors = eigenvectors[:, idx]
-
-    return eigenvalues, eigenvectors, yield_changes_matrix
+    return yield_changes
 
 
-def analyze_components(
-        eigenvalues: np.ndarray,
-        eigenvectors: np.ndarray,
-) -> Dict:
-    total_variance = np.sum(eigenvalues)
-    variance_explained = eigenvalues / total_variance * 100
-    cumulative_variance = np.cumsum(variance_explained)
+def perform_pca_analysis(
+        yield_changes
+):
+    pca = PCA()
+    pca_result = pca.fit_transform(yield_changes)
 
-    std_devs = np.sqrt(eigenvalues)
+    components = pca.components_
+    explained_variance_ratio = pca.explained_variance_ratio_
+    explained_variance = pca.explained_variance_
 
-    analysis = {
-        'eigenvalues': eigenvalues,
-        'std_devs': std_devs,
-        'variance_explained': variance_explained,
-        'cumulative_variance': cumulative_variance,
-        'eigenvectors': eigenvectors,
-    }
+    pc_std_devs = np.sqrt(explained_variance)
 
-    for i in range(min(3, len(eigenvalues))):
-        print(f"Component {i + 1}:")
-        print(f"  Standard Deviation: {std_devs[i]:.2f} bp")
-        print(f"  Variance Explained: {variance_explained[i]:.1f}%")
-        print(f"  Cumulative Variance: {cumulative_variance[i]:.1f}%")
-        print()
-
-    return analysis
+    return pca, components, explained_variance_ratio, explained_variance, pc_std_devs, pca_result
 
 
-def get_maturity_mapping() -> Dict[str, float]:
-    return {
-        'DGS1MO_change': 1/12,
-        'DGS3MO_change': 0.25,
-        'DGS6MO_change': 0.5,
-        'DGS1_change': 1.0,
-        'DGS2_change': 2.0,
-        'DGS3_change': 3.0,
-        'DGS5_change': 5.0,
-        'DGS7_change': 7.0,
-        'DGS10_change': 10.0,
-        'DGS20_change': 20.0,
-        'DGS30_change': 30.0
-    }
+def print_pca_summary(
+        explained_variance_ratio,
+        pc_std_devs
+):
+
+    print(f"{'Component':<12} {'Std Dev (bp)':<15} {'Proportion':<12} {'Cumulative':<12}")
+    print("-" * 60)
+
+    cumulative = 0
+    for i in range(min(5, len(explained_variance_ratio))):
+        cumulative += explained_variance_ratio[i]
+        print(f"PC #{i + 1:<8} {pc_std_devs[i] * 100:<15.2f} {explained_variance_ratio[i]:<12.1%} {cumulative:<12.1%}")
+
+    print(f"\nFirst three components explain: {explained_variance_ratio[:3].sum():.1%} of total variance")
 
 
 def plot_principal_components(
-        analysis: Dict,
-        changes_df: pl.DataFrame,
+        components,
+        explained_variance_ratio,
+        maturity_years,
+        maturity_labels
 ) -> None:
-    maturity_map = get_maturity_mapping()
-    change_columns = [col for col in changes_df.columns if col.endswith('_change')]
-    maturities = [maturity_map[col] for col in change_columns]
-
-    eigenvectors_scaled = analysis['eigenvectors'] * analysis['std_devs'].reshape(1, -1)
-
     fig, axes = plt.subplots(3, 1, figsize=(12, 10))
 
-    components = [
-        {'name': 'PC #1: Level', 'color': 'blue', 'interpretation': 'Level Shift'},
-        {'name': 'PC #2: Slope', 'color': 'red', 'interpretation': 'Slope Change'},
-        {'name': 'PC #3: Curvature', 'color': 'green', 'interpretation': 'Curvature Change'}
-    ]
+    component_names = ['Level', 'Slope', 'Curvature']
+    colors = ['blue', 'red', 'green']
 
-    for i, (ax, comp) in enumerate(zip(axes, components)):
-        ax.plot(maturities, eigenvectors_scaled[:, i], 'o-',
-                color=comp['color'], linewidth=2, markersize=6, label=comp['name'])
+    for i in range(3):
+        axes[i].plot(maturity_years, components[i] * 100, 'o-',
+                     linewidth=2, markersize=6, color=colors[i], label=f'PC #{i + 1}')
+        axes[i].axhline(y=0, color='black', linestyle='--', alpha=0.3)
+        axes[i].set_title(f'PC #{i + 1}: {component_names[i]} ({explained_variance_ratio[i]:.1%} of variance)')
+        axes[i].set_xlabel('Years to Maturity')
+        axes[i].set_ylabel('Yield Change (bp)')
+        axes[i].grid(True, alpha=0.3)
+        axes[i].set_xticks(maturity_years)
+        axes[i].set_xticklabels(maturity_labels)
 
-        ax.set_xlabel('Years to Maturity')
-        ax.set_ylabel('Yield Change (bp)')
-        ax.set_title(f"{comp['name']} - {comp['interpretation']} "
-                     f"({analysis['variance_explained'][i]:.1f}% of variance)")
-        ax.grid(True, alpha=0.3)
-        ax.legend()
+        if i == 0:
+            axes[i].text(0.02, 0.95, 'Positive at all maturities\n(Level shift)',
+                         transform=axes[i].transAxes, verticalalignment='top',
+                         bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
+        elif i == 1:
+            axes[i].text(0.02, 0.95, 'Negative at short end,\nPositive at long end\n(Slope change)',
+                         transform=axes[i].transAxes, verticalalignment='top',
+                         bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
+        else:
+            axes[i].text(0.02, 0.95, 'Positive at ends,\nNegative in middle\n(Curvature change)',
+                         transform=axes[i].transAxes, verticalalignment='top',
+                         bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
 
-        y_max = max(abs(eigenvectors_scaled[:, i].min()), abs(eigenvectors_scaled[:, i].max()))
-        ax.set_ylim(-y_max * 1.1, y_max * 1.1)
-
-        ax.axhline(y=0, color='black', linestyle='-', alpha=0.3)
-
+    plt.suptitle('Principal Components of Yield Curve Changes\n(Similar to Figure 2 in Solomon Brothers Paper)',
+                 fontsize=14, fontweight='bold')
     plt.tight_layout()
     plt.show()
 
 
+def analyze_yield_changes_statistics(
+        yield_changes,
+        maturity_labels
+):
+    stats = yield_changes.describe()
+    print("\nSummary Statistics (in basis points):")
+    print((stats * 100).round(2))
+
+    print("\nCorrelation Matrix of Yield Changes:")
+    corr_matrix = yield_changes.corr()
+
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', center=0,
+                xticklabels=maturity_labels, yticklabels=maturity_labels)
+    plt.title('Correlation Matrix of Yield Changes')
+    plt.tight_layout()
+    plt.show()
+
+    return corr_matrix
+
+
 def plot_variance_explained(
-        analysis: Dict,
-) -> None:
+        explained_variance_ratio
+):
+    cumulative_variance = np.cumsum(explained_variance_ratio)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
-    n_components = min(10, len(analysis['variance_explained']))
-    ax1.bar(range(1, n_components + 1), analysis['variance_explained'][:n_components])
+    ax1.bar(range(1, len(explained_variance_ratio) + 1), explained_variance_ratio * 100)
     ax1.set_xlabel('Principal Component')
     ax1.set_ylabel('Variance Explained (%)')
-    ax1.set_title('Variance Explained by Each Component')
+    ax1.set_title('Individual Variance Explained by Each PC')
     ax1.grid(True, alpha=0.3)
 
-    ax2.plot(range(1, n_components + 1), analysis['cumulative_variance'][:n_components], 'o-')
-    ax2.set_xlabel('Number of Components')
+    ax2.plot(range(1, len(cumulative_variance) + 1), cumulative_variance * 100, 'o-', linewidth=2)
+    ax2.axhline(y=99, color='red', linestyle='--', alpha=0.7, label='99% threshold')
+    ax2.set_xlabel('Number of Principal Components')
     ax2.set_ylabel('Cumulative Variance Explained (%)')
     ax2.set_title('Cumulative Variance Explained')
     ax2.grid(True, alpha=0.3)
-    ax2.axhline(y=99, color='red', linestyle='--', alpha=0.7, label='99%')
     ax2.legend()
 
     plt.tight_layout()
     plt.show()
 
 
-def interpret_components(
-        analysis: Dict,
-        changes_df: pl.DataFrame
-):
-    change_columns = [col for col in changes_df.columns if col.endswith('_change')]
-    maturity_map = get_maturity_mapping()
-
-    pc1 = analysis['eigenvectors'][:, 0]
-    print("First Component (Level Shift):")
-    print(f"  All coefficients positive: {np.all(pc1 > 0)}")
-    print(f"  Variance explained: {analysis['variance_explained'][0]:.1f}%")
-    print(f"  Standard deviation: {analysis['std_devs'][0]:.2f} bp")
-    print()
-
-    pc2 = analysis['eigenvectors'][:, 1]
-    short_end_negative = pc2[0] < 0
-    long_end_positive = pc2[-1] > 0
-    print("Second Component (Slope Change):")
-    print(f"  Short end negative: {short_end_negative}")
-    print(f"  Long end positive: {long_end_positive}")
-    print(f"  Variance explained: {analysis['variance_explained'][1]:.1f}%")
-    print(f"  Standard deviation: {analysis['std_devs'][1]:.2f} bp")
-    print()
-
-    pc3 = analysis['eigenvectors'][:, 2]
-    print("Third Component (Curvature Change):")
-    print(f"  Variance explained: {analysis['variance_explained'][2]:.1f}%")
-    print(f"  Standard deviation: {analysis['std_devs'][2]:.2f} bp")
-    print()
-
-    print(f"Total variance explained by first 3 components: {analysis['cumulative_variance'][2]:.1f}%")
-
-
 def main():
-    df = load_yield_data()
-    changes_df = calculate_yield_changes(df)
-    eigenvalues, eigenvectors, changes_matrix = perform_pca(changes_df)
-    analysis = analyze_components(eigenvalues, eigenvectors)
-    interpret_components(analysis, changes_df)
+    df, yields, yield_columns, maturity_labels, maturity_years = load_and_prepare_data()
 
-    plot_principal_components(analysis, changes_df)
-    plot_variance_explained(analysis)
+    yield_changes = compute_yield_changes(yields)
+
+    pca, components, explained_variance_ratio, explained_variance, pc_std_devs, pca_result = perform_pca_analysis(
+        yield_changes)
+
+    print_pca_summary(explained_variance_ratio, pc_std_devs)
+
+    corr_matrix = analyze_yield_changes_statistics(yield_changes, maturity_labels)
+
+    plot_principal_components(components, explained_variance_ratio, maturity_years, maturity_labels)
+    plot_variance_explained(explained_variance_ratio)
+
+    return {
+        'pca': pca,
+        'components': components,
+        'explained_variance_ratio': explained_variance_ratio,
+        'yield_changes': yield_changes,
+        'maturity_years': maturity_years,
+        'maturity_labels': maturity_labels,
+        'pca_result': pca_result
+    }
 
 
 if __name__ == "__main__":
-    main()
+    results = main()
