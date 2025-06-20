@@ -18,6 +18,8 @@ Applies exponential decay weighting where yesterday's return gets 98% the weight
 
 Unlike Kalman, the weighting scheme is fixed rather than adaptive - it doesn't adjust based on whether beta appears to be changing. This makes it more responsive to recent patterns but also more susceptible to temporary noise. Works well when recent regime changes are persistent but can be overly reactive to temporary volatility spikes.
 
+From my understanding this is how the beta factor is estimated in commerical models.
+
 ### 4 - Realized Beta
 
 Forward-looking calculation using the subsequent 126 trading days. This isn't predictive - it's the ground truth we're trying to forecast. Calculated as the covariance of forward stock returns with forward market returns divided by forward market variance. The 126-day window roughly matches one earnings cycle, capturing medium-term systematic risk relationships while avoiding the noise of shorter windows.
