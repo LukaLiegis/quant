@@ -16,8 +16,34 @@ def get_data(
     return stock_returns, market_returns
 
 
-def rolling_beta():
-    ...
+def rolling_beta(
+        stock_returns,
+        market_returns,
+        window: int = 252,
+):
+    betas = pd.DataFrame(index = stock_returns.index, columns = stock_returns.columns)
+
+    for i, date in enumerate(stock_returns.index[window:], window):
+        stock_window = stock_returns.iloc[i - window : i]
+        market_window = market_returns.iloc[i - window : i]
+
+        for ticker in stock_returns.columns:
+            stock_ret = stock_window[ticker].dropna()
+            aligned_market = market_window.reindex(stock_ret.index)
+
+            valid_data = pd.concat([stock_window, aligned_market], axis=1).dropna()
+
+            if len(valid_data) > 50:
+                covariance_matrix = valid_data.cov()
+                if len(covariance_matrix) > 1:
+                    covariance = covariance_matrix.iloc[0, 1]
+                    market_variance = covariance_matrix.iloc[1, 1]
+
+                    if market_variance > 0:
+                        beta = covariance / market_variance
+                        betas.loc[date, ticker] = beta
+
+    return betas.astype(float)
 
 
 def main():
