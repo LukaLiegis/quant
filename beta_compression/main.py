@@ -46,6 +46,30 @@ def rolling_beta(
     return betas.astype(float)
 
 
+def calculate_beta_iqr(
+        betas: pd.DataFrame,
+) -> pd.DataFrame:
+    p75 = betas.quantile(0.75, axis=1)
+    p25 = betas.quantile(0.25, axis=1)
+
+    iqr = p75 - p25
+
+    median_beta = betas.median(axis = 1)
+    mean_beta = betas.mean(axis = 1)
+    std_beta = betas.std(axis = 1)
+
+    beta_stats = pd.DataFrame({
+        'IQR': iqr,
+        'P75': p75,
+        'P25': p25,
+        'Median': median_beta,
+        'Mean': mean_beta,
+        'Std': std_beta,
+    })
+
+    return beta_stats
+
+
 def main():
     ...
 
