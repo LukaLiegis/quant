@@ -1,5 +1,6 @@
 import pandas as pd
 import yfinance as yf
+from matplotlib import pyplot as plt
 
 
 def get_data(
