@@ -1,15 +1,16 @@
 import pandas as pd
 import yfinance as yf
+from typing import Tuple
 from matplotlib import pyplot as plt
 
 
 def get_data(
         tickers,
         market_ticker: str = '^GSPC'
-):
-    all_tickers = tickers + market_ticker
-    data = yf.download(all_tickers, start='2000-01-01', end='2024-12-31', progress=False)['Close']
-    returns = data.pct_change().dropna()
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    all_tickers = tickers + [market_ticker]
+    data = yf.download(all_tickers, start='2010-01-01', end='2024-12-31')['Close']
+    returns = data.pct_change(fill_method=None).dropna()
 
     market_returns = returns[market_ticker]
     stock_returns = returns[tickers].dropna()
@@ -18,8 +19,8 @@ def get_data(
 
 
 def rolling_beta(
-        stock_returns,
-        market_returns,
+        stock_returns: pd.DataFrame,
+        market_returns: pd.DataFrame,
         window: int = 252,
 ):
     betas = pd.DataFrame(index = stock_returns.index, columns = stock_returns.columns)
@@ -71,8 +72,29 @@ def calculate_beta_iqr(
     return beta_stats
 
 
+def plot_compression(
+        beta_stats: pd.DataFrame,
+        tickers: list,
+) -> None:
+
+    fig, ax1 = plt.subplots(1, 1, figsize = (12, 8))
+    ax1.plot(beta_stats['IQR'])
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('IQR')
+    ax1.grid(True)
+
+    plt.show()
+
+
 def main():
-    ...
+    tickers = [
+        'AAPL', 'MSFT', 'NVDA', 'WMT'
+    ]
+
+    stock_returns, market_returns = get_data(tickers)
+    betas = calculate_beta_iqr(stock_returns, market_returns)
+    beta_stats = calculate_beta_iqr(betas)
+    plot_compression(beta_stats, tickers)
 
 
 if __name__ == '__main__':
