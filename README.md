@@ -7,6 +7,10 @@ A comparison of multiple research papers on ways of calculating an asset's beta.
 
 The methods are compared by using RMSE.
 
+### Beta Compression
+
+An implementation of the beta compression phenomenon from Frazzini and Pedersen.
+
 ### Momentum
 A systematic time series momentum strategy with volatility adjusted position sizing across all asset classes. 
 
