@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 import yfinance as yf
 from typing import Tuple
@@ -21,7 +22,7 @@ def get_data(
 def rolling_beta(
         stock_returns: pd.DataFrame,
         market_returns: pd.DataFrame,
-        window: int = 252,
+        window: int = 63,
 ):
     betas = pd.DataFrame(index = stock_returns.index, columns = stock_returns.columns)
 
@@ -31,19 +32,20 @@ def rolling_beta(
 
         for ticker in stock_returns.columns:
             stock_ret = stock_window[ticker].dropna()
-            aligned_market = market_window.reindex(stock_ret.index)
+            aligned_market = market_window.reindex(stock_ret.index).dropna()
 
-            valid_data = pd.concat([stock_window, aligned_market], axis=1).dropna()
+            common_dates = stock_ret.index.intersection(aligned_market.index)
 
-            if len(valid_data) > 50:
-                covariance_matrix = valid_data.cov()
-                if len(covariance_matrix) > 1:
-                    covariance = covariance_matrix.iloc[0, 1]
-                    market_variance = covariance_matrix.iloc[1, 1]
+            if len(common_dates) > 50:
+                stock_aligned = stock_ret.reindex(common_dates)
+                market_aligned = aligned_market.reindex(common_dates)
 
-                    if market_variance > 0:
-                        beta = covariance / market_variance
-                        betas.loc[date, ticker] = beta
+                covariance = stock_aligned.cov(market_aligned)
+                market_variance = market_aligned.var()
+
+                if market_variance > 0:
+                    beta = covariance / market_variance
+                    betas.loc[date, ticker] = beta
 
     return betas.astype(float)
 
@@ -88,11 +90,11 @@ def plot_compression(
 
 def main():
     tickers = [
-        'AAPL', 'MSFT', 'NVDA', 'WMT'
+        'AAPL', 'MSFT', 'NVDA', 'JPM', 'WMT'
     ]
 
     stock_returns, market_returns = get_data(tickers)
-    betas = calculate_beta_iqr(stock_returns, market_returns)
+    betas = rolling_beta(stock_returns, market_returns)
     beta_stats = calculate_beta_iqr(betas)
     plot_compression(beta_stats, tickers)
 
