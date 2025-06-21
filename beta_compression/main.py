@@ -1,4 +1,3 @@
-import time
 import pandas as pd
 import yfinance as yf
 from typing import Tuple
@@ -81,6 +80,7 @@ def plot_compression(
 
     fig, ax1 = plt.subplots(1, 1, figsize = (12, 8))
     ax1.plot(beta_stats['IQR'])
+    ax1.set_title('Beta Compression Over Time')
     ax1.set_xlabel('Date')
     ax1.set_ylabel('IQR')
     ax1.grid(True)
@@ -90,7 +90,35 @@ def plot_compression(
 
 def main():
     tickers = [
-        'AAPL', 'MSFT', 'NVDA', 'JPM', 'WMT'
+        # Technology - High Beta
+        'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'NFLX', 'AMD', 'CRM',
+
+        # Financial Services - Medium Beta
+        'JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'BRK-B',
+
+        # Consumer Defensive - Low Beta
+        'WMT', 'PG', 'KO', 'PEP', 'JNJ', 'MRK', 'PFE',
+
+        # Utilities - Very Low Beta
+        'NEE', 'DUK', 'SO', 'EXC',
+
+        # Energy - High Beta/Cyclical
+        'XOM', 'CVX', 'COP', 'EOG',
+
+        # Industrial - Medium Beta
+        'BA', 'CAT', 'GE', 'MMM', 'UPS',
+
+        # Consumer Discretionary - High Beta
+        'HD', 'MCD', 'DIS', 'NKE', 'SBUX',
+
+        # Healthcare - Medium-Low Beta
+        'UNH', 'ABT', 'TMO', 'DHR',
+
+        # Communication - Medium Beta
+        'VZ', 'T', 'CMCSA',
+
+        # REITs - Medium Beta
+        'AMT', 'PLD', 'CCI'
     ]
 
     stock_returns, market_returns = get_data(tickers)
