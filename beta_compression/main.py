@@ -75,7 +75,6 @@ def calculate_beta_iqr(
 
 def plot_compression(
         beta_stats: pd.DataFrame,
-        tickers: list,
 ) -> None:
 
     fig, ax1 = plt.subplots(1, 1, figsize = (12, 8))
@@ -124,7 +123,8 @@ def main():
     stock_returns, market_returns = get_data(tickers)
     betas = rolling_beta(stock_returns, market_returns)
     beta_stats = calculate_beta_iqr(betas)
-    plot_compression(beta_stats, tickers)
+    beta_stats.to_csv('beta_stats.csv')
+    plot_compression(beta_stats)
 
 
 if __name__ == '__main__':
