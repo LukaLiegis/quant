@@ -1,6 +1,10 @@
 # quant
 
-I learn best by doing rather than just be reading and I want to learn everything there is to know in the field of quant research, so this is my attempt of re-creating and testing as many different aspects of the finance world. Each project has a write-up attached inside the folder.
+I want to know everything possible that there is to know about markets, specifically the intersection between mathematics, computer science, and markets (some might call this Quantitative Research). To achieve this goal I aim to conduct as much research as possible into as many asset classes as possible in as many timeframes as possible. This does not only have to be alpha research, this could be portfolio optimization or optimal execution or time series generation. 
+
+It is possible that some of these projects will not be complete, this is because while I think about the optimal approach to one project I may be setting up another or perhaps I am still just researching it. I will try to keep uncompleted projects to a minimum.
+
+Each project contains a longer write-up that goes in-depth into all the inner workings.
 
 ### [Beta Calculation](./beta_calculation)
 A comparison of multiple research papers on ways of calculating an asset's beta. 
