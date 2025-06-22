@@ -10,7 +10,7 @@ The idea itself is just that we estimate the daily beta for a basket of stocks a
 
 ### Beta Compression as a Signal
 
-
+Coming soon...
 
 ### Improvements
 
