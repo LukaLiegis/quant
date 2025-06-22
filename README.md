@@ -2,7 +2,7 @@
 
 I learn best by doing rather than just be reading and I want to learn everything there is to know in the field of quant research, so this is my attempt of re-creating and testing as many different aspects of the finance world. Each project has a write-up attached inside the folder.
 
-### Beta Calculation
+### [Beta Calculation](./beta_calculation)
 A comparison of multiple research papers on ways of calculating an asset's beta. 
 
 The methods are compared by using RMSE.
