@@ -37,19 +37,19 @@ This serves as a natural benchmark given its widespread adoption in risk managem
 ![result](myplot.png)
 
 ```
-Model             MSE          R²        MAE        RMSE
-HAR             0.014884    0.287866   0.080546   0.122002
-Kernel Ridge    0.017696    0.153341   0.081571   0.133027
-GARCH           0.024266   -0.160974   0.118618   0.155775
+Model             MSE          R²         MAE         RMSE
+HAR             0.000050    0.994802    0.003414    0.007094
+Kernel Ridge    0.000098    0.989877    0.003648    0.009899
+GARCH           0.007648    0.209912    0.040828    0.087453
 ```
 
 The linear HAR model substantially outperforms both nonlinear and traditional approaches, achieving nearly 29% explanatory power for volatility dynamic
 
 ```
-               HAR    Kernel Ridge   GARCH
-HAR           1.0000     0.7353     0.1983
-Kernel Ridge  0.7353     1.0000     0.1976
-GARCH         0.1983     0.1976     1.0000
+               HAR      Kernel Ridge   GARCH
+HAR           1.0000        0.9977     0.6473
+Kernel Ridge  0.9977        1.0000     0.6303
+GARCH         0.6473        0.6303     1.0000
 ```
 
 HAR and Kernel Ridge produce moderately correlated forecasts (73.5%), suggesting they capture similar underlying patterns, but HAR does so more efficiently. Both models show low correlation with GARCH (≈20%), indicating fundamentally different approaches to volatility modeling.
