@@ -16,13 +16,13 @@ def get_data():
     return data
 
 
-def realized_vol(prices, window: int = 1):
+def realized_vol(
+        prices,
+        window: int = 63
+) -> pd.Series:
     returns = np.log(prices / prices.shift(1)).dropna()
 
-    if window == 1:
-        rv = np.abs(returns) * np.sqrt(252)
-    else:
-        rv = returns.rolling(window).std()* np.sqrt(252)
+    rv = returns.rolling(window).std() * np.sqrt(252)
 
     return rv.dropna()
 
