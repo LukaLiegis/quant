@@ -63,13 +63,46 @@ def fit_kernel_ridge_model(X, y, alpha: float = 0.1, gamma: float = 0.05):
     return model, scaler, X_kernel.columns.tolist()
 
 
-def fit_garch_model(returns, p=1, q=1):
-    returns_pct = returns * 100
+def fit_garch_model(
+        returns_train,
+        returns_test,
+        window_size: int = 252,
+        p=1,
+        q=1
+):
+    forecasts = []
 
-    garch_model = arch_model(returns_pct, vol='GARCH', p=p, q=q)
-    garch_fit = garch_model.fit(disp='off')
+    all_returns = pd.concat([returns_train, returns_test])
 
-    return garch_fit
+    for i in range(len(returns_test)):
+        current_pos = len(returns_train) + i
+
+        start_pos = max(0, current_pos - window_size)
+        train_window = all_returns.iloc[start_pos:current_pos]
+
+        if len(train_window) < 60:
+            train_window = all_returns.iloc[:current_pos]
+
+        train_window_pct = train_window * 100
+
+        try:
+            garch_model = arch_model(train_window_pct, vol='GARCH', p=p, q=q)
+            garch_fit = garch_model.fit(disp='off')
+
+            forecast = garch_fit.forecast(horizon=1, reindex=False)
+
+            vol_forecasts = np.sqrt(forecast.variance.values[0, 0]) / 100 * np.sqrt(252)
+            forecasts.append(vol_forecasts)
+
+        except Exception as e:
+            if forecasts:
+                forecasts.append(forecasts[-1])
+            else:
+                vol_fallback = train_window.std() * np.sqrt(252)
+                forecasts.append(vol_fallback)
+
+            print(f'Garch convergence issue at {i + 1}, will use fallback.')
+    return np.array(forecasts)
 
 
 def plot_volatility_forecasts(actual, predictions):
@@ -181,11 +214,8 @@ def main():
     kernel_results = evaluate_model(y_test, y_pred_kernel, 'Kernel Ridge')
     results.append(kernel_results)
 
-    garch_fit = fit_garch_model(returns_train)
-    print(f"GARCH Model fitted successfully")
-
-    garch_forecasts = garch_fit.forecast(horizon=len(returns_test), reindex=False)
-    y_pred_garch = np.sqrt(garch_forecasts.variance.values[-1, :]) / 100 * np.sqrt(252)  # Convert back to annualized
+    print("Fitting GARCH with rolling window forecasts...")
+    y_pred_garch = fit_garch_model(returns_train, returns_test, window_size=252)
     predictions['GARCH'] = y_pred_garch
 
     garch_results = evaluate_model(y_test, y_pred_garch, 'GARCH')
