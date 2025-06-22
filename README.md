@@ -7,27 +7,27 @@ A comparison of multiple research papers on ways of calculating an asset's beta.
 
 The methods are compared by using RMSE.
 
-### Beta Compression
+### [Beta Compression](./beta_compression)
 
 An implementation of the beta compression phenomenon from Frazzini and Pedersen.
 
-### Momentum
+### [Momentum](./momentum)
 A systematic time series momentum strategy with volatility adjusted position sizing across all asset classes. 
 
-### Waymo Long
+### [Waymo Long](./waymo_long)
 A not so serious approach of trying to decompose Google's stock price and go long waymo by removing all of Google's other businesses from its stock price.
 
-### Calculating Volatility
+### [Calculating Volatility](./calculating_vol)
 
 Implementing the six different methods of calculating volatility for SPY and comparing this to the VIX index.
 
-### Volatility Forecasting
+### [Volatility Forecasting](./volatility_forecasting)
 Comparing different volatility forecasting methods (HAR, Kernel Ridge) from research papers. A single way is used to calculate volatility and the methods are compared to a standard GARCH model to see how each model's forecasting ability differs.
 
-### Yield Curve Decomposition 
+### [Yield Curve Decomposition](./yield_curve_decomp) 
 This project initially started as a recreation of Salomon Smith Barney's paper by the name Principles of Principal Components which aims to decompose the yield curve into level slope and curvature since I did not want to go the backtest route due to data unavailability I chose to further analyze the PCs.
 
-### Stock Prediction AI 
+### [Stock Prediction AI](./stock_prediction) 
 A recreation of [this](https://github.com/borisbanushev/stockpredictionai) github project which was one of the first quant projects I had ever looked at.
 
 The script uses a variational autoencoder to create features from the returns dataset, and then a Wasserstein GAN to forecast day ahead returns. Bayesian optimisation is used to tune the GAN's hyperparameters.
