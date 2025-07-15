@@ -11,9 +11,14 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 
 def get_data():
-    data = yf.download('^GSPC', start='1986-01-01', end='2024-12-31')['Close']
-    data = data.dropna()
-    return data
+    spx_data = yf.download('^GSPC', start='1986-01-01', end='2024-12-31')['Close']
+    vix_data = yf.download('^VIX', start='1986-01-01', end='2024-12-31')['Close']
+
+    common_dates = spx_data.index.intersection(vix_data.index)
+    spx_data = spx_data.loc[common_dates].dropna()
+    vix_data = vix_data.loc[common_dates].dropna()
+
+    return spx_data, vix_data
 
 
 def realized_vol(
