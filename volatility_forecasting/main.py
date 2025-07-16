@@ -149,6 +149,8 @@ def plot_volatility_forecasts(actual, predictions):
     predictions_filtered = {}
     for model_name, pred_values in predictions.items():
         if isinstance(pred_values, np.ndarray):
+            if len(pred_values.shape) > 1:
+                pred_values = pred_values.flatten()
             pred_series = pd.Series(pred_values, index=actual.index)
         else:
             pred_series = pred_values
@@ -182,10 +184,24 @@ def plot_volatility_forecasts(actual, predictions):
 
 
 def evaluate_model(y_true, y_pred, model_name):
-    if isinstance(y_true, pd.Series):
+    if isinstance(y_true, pd.DataFrame):
+        y_true = y_true.values.flatten()
+    elif isinstance(y_true, pd.Series):
         y_true = y_true.values
-    if isinstance(y_pred, pd.Series):
+    elif not isinstance(y_true, np.ndarray):
+        y_true = np.array(y_true)
+
+    if isinstance(y_pred, pd.DataFrame):
+        y_pred = y_pred.values.flatten()
+    elif isinstance(y_pred, pd.Series):
         y_pred = y_pred.values
+    elif not isinstance(y_pred, np.ndarray):
+        y_pred = np.array(y_pred)
+
+    if len(y_true.shape) > 1:
+        y_true = y_true.flatten()
+    if len(y_pred.shape) > 1:
+        y_pred = y_pred.flatten()
 
     min_len = min(len(y_true), len(y_pred))
     y_true = y_true[:min_len]
@@ -207,10 +223,7 @@ def evaluate_model(y_true, y_pred, model_name):
     }
 
 
-def plot_metrics_vs_horizon(
-        results_by_horizon,
-        horizons
-):
+def plot_metrics_vs_horizon(results_by_horizon, horizons):
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
     axes = axes.flatten()
     fig.suptitle('Model Performance Across Forecast Horizons', fontsize=16, fontweight='bold')
@@ -221,7 +234,6 @@ def plot_metrics_vs_horizon(
     for idx, (metric, title) in enumerate(zip(metrics, metric_titles)):
         ax = axes[idx]
 
-        # Get all model names
         all_models = set()
         for h in horizons:
             for result in results_by_horizon[h]:
@@ -294,6 +306,13 @@ def main():
         y = targets[horizon].loc[common_index].iloc[:-max_horizon]
         y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
+        if isinstance(y_test, pd.Series):
+            y_test_values = y_test.values
+        elif isinstance(y_test, pd.DataFrame):
+            y_test_values = y_test.values.flatten()
+        else:
+            y_test_values = np.array(y_test)
+
         results = []
         predictions = {}
 
@@ -301,26 +320,58 @@ def main():
         X_test_har = X_test[['rv_daily_lag', 'rv_weekly_lag', 'rv_monthly_lag']]
         X_test_har = sm.add_constant(X_test_har)
         y_pred_har = har_model.predict(X_test_har)
+
+        if isinstance(y_pred_har, pd.Series):
+            y_pred_har = y_pred_har.values
+        elif isinstance(y_pred_har, pd.DataFrame):
+            y_pred_har = y_pred_har.values.flatten()
+        if len(y_pred_har.shape) > 1:
+            y_pred_har = y_pred_har.flatten()
+
         predictions['HAR'] = y_pred_har
-        har_results = evaluate_model(y_test, y_pred_har, 'HAR')
+        har_results = evaluate_model(y_test_values, y_pred_har, 'HAR')
         results.append(har_results)
 
         kernel_model, scaler, kernel_features = fit_kernel_ridge_model(X_train, y_train)
         X_test_kernel = X_test[kernel_features]
         X_test_kernel_scaled = scaler.transform(X_test_kernel)
         y_pred_kernel = kernel_model.predict(X_test_kernel_scaled)
+
+        if isinstance(y_pred_kernel, pd.Series):
+            y_pred_kernel = y_pred_kernel.values
+        elif isinstance(y_pred_kernel, pd.DataFrame):
+            y_pred_kernel = y_pred_kernel.values.flatten()
+        if len(y_pred_kernel.shape) > 1:
+            y_pred_kernel = y_pred_kernel.flatten()
+
         predictions['Kernel Ridge'] = y_pred_kernel
-        kernel_results = evaluate_model(y_test, y_pred_kernel, 'Kernel Ridge')
+        kernel_results = evaluate_model(y_test_values, y_pred_kernel, 'Kernel Ridge')
         results.append(kernel_results)
 
         y_pred_garch = fit_garch_model(returns_train, returns_test, horizon=horizon, window_size=252)
+
+        if isinstance(y_pred_garch, pd.Series):
+            y_pred_garch = y_pred_garch.values
+        elif isinstance(y_pred_garch, pd.DataFrame):
+            y_pred_garch = y_pred_garch.values.flatten()
+        if len(y_pred_garch.shape) > 1:
+            y_pred_garch = y_pred_garch.flatten()
+
         predictions['GARCH'] = y_pred_garch
-        garch_results = evaluate_model(y_test, y_pred_garch, 'GARCH')
+        garch_results = evaluate_model(y_test_values, y_pred_garch, 'GARCH')
         results.append(garch_results)
 
         vix_forecasts = get_vix_forecasts(vix_data, y_test.index)
+
+        if isinstance(vix_forecasts, pd.Series):
+            vix_forecasts = vix_forecasts.values
+        elif isinstance(vix_forecasts, pd.DataFrame):
+            vix_forecasts = vix_forecasts.values.flatten()
+        if len(vix_forecasts.shape) > 1:
+            vix_forecasts = vix_forecasts.flatten()
+
         predictions['VIX'] = vix_forecasts
-        vix_results = evaluate_model(y_test, vix_forecasts, 'VIX')
+        vix_results = evaluate_model(y_test_values, vix_forecasts, 'VIX')
         results.append(vix_results)
 
         results_by_horizon[horizon] = results
@@ -329,6 +380,7 @@ def main():
         print(f"\n{horizon}-day forecast results:")
         print(results_df[['Model', 'MSE', 'R²', 'MAE', 'MAPE']].to_string(index=False, float_format='%.4f'))
 
+    print(f"\nGenerating volatility forecast comparison plot...")
     plot_volatility_forecasts(y_test, predictions)
 
     plot_metrics_vs_horizon(results_by_horizon, horizons)
