@@ -81,6 +81,41 @@ class LSTMGenerator(nn.Module):
         return output
 
 
+class CNNDiscriminator(nn.Module):
+    def __init__(self, input_dim, seq_length):
+        super(CNNDiscriminator, self).__init__()
+
+        self.conv1 = nn.Conv1d(input_dim, 32, kernel_size = 3, stride = 1, padding = 1)
+        self.conv2 = nn.Conv1d(32, 64, kernel_size = 3, stride = 1, padding = 1)
+        self.conv3 = nn.Conv1d(64, 128, kernel_size = 3, stride = 1, padding = 1)
+
+        self.pool = nn.MaxPool1d(2)
+        self.dropout = nn.Dropout(0.2)
+
+        conv_output_size = seq_length // 8 * 128
+
+        self.fc = nn.Sequential(
+            nn.Linear(conv_output_size, 256),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.2),
+            nn.Linear(256, 128),
+            nn.LeakyReLU(0.2),
+            nn.Linear(128, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        x = x.transpose(1, 2)
+
+        x = self.pool(F.leaky_relu(self.conv1(x), 0.2))
+        x = self.pool(F.leaky_relu(self.conv2(x), 0.2))
+        x = self.pool(F.leaky_relu(self.conv3(x), 0.2))
+
+        x = x.flatten(1)
+        x = self.fc(x)
+        return x
+
+
 def get_data() -> pd.DataFrame:
     df = pd.read_csv('xnas-itch-20180501-20250430.ohlcv-1s.csv.zst', compression='zstd')
 
