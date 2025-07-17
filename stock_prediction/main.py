@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import pandas as pd
 import torch.nn as nn
-import yfinance as yf
 from torch import optim
 from typing import Tuple, Any
 import torch.nn.functional as F
@@ -62,6 +61,24 @@ class VAE(nn.Module):
     def extract_features(self, x):
         mu, _ = self.encode(x)
         return mu
+
+
+class LSTMGenerator(nn.Module):
+    def __init__(self, input_dim, hidden_dim = 128, num_layers = 2):
+        super(LSTMGenerator, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+
+        self.lstm = nn.LSTM(input_size = input_dim, hidden_size = hidden_dim, num_layers = num_layers, batch_first = True)
+        self.fc = nn.Linear(hidden_dim, 1)
+        self.dropout = nn.Dropout(0.2)
+
+    def forward(self, x):
+        lstm_out, _ = self.lstm(x)
+        lstm_out = lstm_out[:, -1, :]
+        lstm_out = self.dropout(lstm_out)
+        output = self.fc(lstm_out)
+        return output
 
 
 def get_data() -> pd.DataFrame:
@@ -200,11 +217,10 @@ def prepare_data(
 
 
 def main():
-    ticker = 'GS'
     window_size = 11
     forecast_horizon = 1
 
-    data = get_data(ticker)
+    data = get_data()
     print(f'There are {data.shape[0]} number of days in the dataset.')
 
     dataset_TI_df = features(data)
@@ -282,7 +298,7 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    torch.save(vae_model.state_dict(), f'{ticker}_returns_vae_model.pth')
+    torch.save(vae_model.state_dict(), f'GS_returns_vae_model.pth')
 
     prediction_data = {
         'train_features': train_features,
@@ -295,7 +311,7 @@ def main():
         'target_scaler': data_splits['target_scaler']
     }
 
-    np.savez(f'{ticker}_returns_vae_features.npz', **prediction_data)
+    np.savez(f'GS_returns_vae_features.npz', **prediction_data)
 
 
 if __name__ == '__main__':
