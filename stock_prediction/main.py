@@ -64,15 +64,14 @@ class VAE(nn.Module):
         return mu
 
 
-def get_data(ticker: str) -> pd.DataFrame:
-    df = yf.download(ticker, period='max')['Close']
-    df = df.rename({ticker: 'price'}, axis = 'columns')
+def get_data() -> pd.DataFrame:
+    df = pd.read_csv('xnas-itch-20180501-20250430.ohlcv-1s.csv.zst', compression='zstd')
 
     return df
 
 
 def features(dataset):
-    dataset['returns'] = ((dataset['price'] / dataset['price'].shift(1)) - 1) * 100
+    dataset['returns'] = ((dataset['close'] / dataset['close'].shift(1)) - 1) * 100
 
     return dataset
 
