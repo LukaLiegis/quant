@@ -152,44 +152,52 @@ def create_sequence(
     return np.array(sequences), np.array(targets)
 
 
-def vae_loss_function(recon_x, x, mu, log_var, beta: float = 1.0):
+def vae_loss_function(recon_x, x, mu, log_var):
     recon_loss = F.mse_loss(recon_x, x, reduction='sum')
     kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
     return recon_loss + kl_loss
 
 
-def train_vae(model, train_loader, val_loader, epochs = 100, lr = 0.001):
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+def train_vae(
+        vae,
+        train_loader,
+        val_loader,
+        epochs = 100,
+        lr = 0.001
+):
+    optimizer = optim.Adam(vae.parameters(), lr=lr)
 
     train_losses = []
     val_losses = []
 
     for epoch in range(epochs):
-        model.train()
+        vae.train()
         train_loss = 0
-        for batch_x, _ in train_loader:
+
+        for batch_data, _ in train_loader:
             optimizer.zero_grad()
-
-            recon_x, mu, log_var = model(batch_x)
-            loss = vae_loss_function(recon_x, batch_x, mu, log_var)
-
+            recon_batch, mu, log_var = vae(batch_data)
+            loss = vae_loss_function(recon_batch, batch_data, mu, log_var)
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
 
-        model.eval()
+        vae.eval()
         val_loss = 0
         with torch.no_grad():
-            for batch_x, _ in val_loader:
-                recon_x, mu, log_var = model(batch_x)
-                loss = vae_loss_function(recon_x, batch_x, mu, log_var)
+            for batch_data, _ in val_loader:
+                recon_batch, mu, log_var = vae(batch_data)
+                loss = vae_loss_function(recon_batch, batch_data, mu, log_var)
                 val_loss += loss.item()
 
-        train_losses.append(train_loss / len(train_loader.dataset))
-        val_losses.append(val_loss / len(val_loader.dataset))
+        avg_train_loss = train_loss / len(train_loader.dataset)
+        avg_val_loss = val_loss / len(val_loader.dataset)
+
+        train_losses.append(avg_train_loss)
+        val_losses.append(avg_val_loss)
 
         if epoch % 10 == 0:
-            print(f'Epoch {epoch}, Train Loss: {train_losses[-1]:.4f}, Val Loss: {val_losses[-1]:.4f}')
+            print(f'Epoch [{epoch} / {epochs}], Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}')
 
     return train_losses, val_losses
 
