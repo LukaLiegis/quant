@@ -1,5 +1,3 @@
-from ctypes.wintypes import tagSIZE
-
 import torch
 import numpy as np
 import pandas as pd
@@ -202,89 +200,112 @@ def train_vae(
     return train_losses, val_losses
 
 
-def extract_vae_features(model, data_loader):
-    model.eval()
-    features = []
-    returns = []
+def train_gan(
+        generator,
+        discriminator,
+        train_loader,
+        epochs = 100,
+        lr = 0.0002,
+):
+    criterion = nn.BCELoss()
 
-    with torch.no_grad():
-        for batch_x, batch_y in data_loader:
-            batch_features = model.extract_features(batch_x)
-            features.append(batch_features.numpy())
-            returns.append(batch_y.numpy())
+    optimizer_g = optim.Adam(generator.parameters(), lr=lr)
+    optimizer_d = optim.Adam(discriminator.parameters(), lr=lr)
 
-    return np.vstack(features), np.concatenate(returns)
+    g_losses = []
+    d_losses = []
 
+    for epoch in range(epochs):
+        for i, (real_data, real_targets) in enumerate(train_loader):
+            batch_size = real_data.size(0)
 
-def prepare_data(
-        data,
-        window_size: int,
-        forecast_horizon: int,
-        train_ratio: str = 0.7
-) -> dict[str | Any, StandardScaler | Any]:
-    X, y, valid_indices = create_returns_sequence(data, window_size, forecast_horizon)
+            # Train discriminator
+            optimizer_d.zero_grad()
 
-    n_samples = len(X)
-    train_size = int(n_samples * train_ratio)
-    val_size = int(n_samples * 0.15)
+            real_labels = torch.ones(batch_size, 1)
+            real_outputs = discriminator(real_data)
+            d_loss_real = criterion(real_outputs, real_labels)
 
-    train_end = train_size
-    val_end = train_end + val_size
+            fake_outputs = generator(real_data)
+            fake_data = torch.cat([real_data[:, 1:], fake_outputs.unsqueeze(1)], dim=1)
+            fake_labels = torch.zeros(batch_size, 1)
+            fake_outputs_d = discriminator(fake_data.detach())
+            d_loss_fake = criterion(fake_outputs_d, fake_labels)
 
-    X_train = X[:train_end]
-    y_train = y[:train_end]
+            d_loss = d_loss_real + d_loss_fake
+            d_loss.backward()
+            optimizer_d.step()
 
-    X_val = X[train_end:val_end]
-    y_val = y[train_end:val_end]
+            # Train Generator
+            optimizer_g.zero_grad()
 
-    X_test = X[val_end:]
-    y_test = y[val_end:]
+            fake_outputs_d = discriminator(fake_data)
+            g_loss = criterion(fake_outputs_d, real_labels)
+            g_loss.backward()
+            optimizer_g.step()
 
-    returns_scaler = StandardScaler()
-    X_train_scaled = returns_scaler.fit_transform(X_train)
-    X_val_scaled = returns_scaler.transform(X_val)
-    X_test_scaled = returns_scaler.transform(X_test)
+            g_losses.append(g_loss.item())
+            d_losses.append(d_loss.item())
 
-    target_scaler = StandardScaler()
-    y_train_scaled = target_scaler.fit_transform(y_train.reshape(-1, 1)).flatten()
-    y_val_scaled = target_scaler.transform(y_val.reshape(-1, 1)).flatten()
-    y_test_scaled = target_scaler.transform(y_test.reshape(-1, 1)).flatten()
+        if epoch % 10 == 0:
+            print(f'Epoch [{epoch} / {epochs}], D Loss: {d_loss.item():.4f}, G Loss: {g_loss.item():.4f}')
 
-    return {
-        'X_train': X_train_scaled, 'y_train': y_train_scaled,
-        'X_val': X_val_scaled, 'y_val': y_val_scaled,
-        'X_test': X_test_scaled, 'y_test': y_test_scaled,
-        'returns_scaler': returns_scaler,
-        'target_scaler': target_scaler,
-        'y_train_original': y_train,
-        'y_val_original': y_val,
-        'y_test_original': y_test
-    }
+    return g_losses, d_losses
 
 
 def main():
-    window_size = 11
-    forecast_horizon = 1
+    df = pd.read_csv('xnas-itch-20180501-20250430.ohlcv-1s.csv.zst', compression='zstd')
 
-    data = get_data()
-    print(f'There are {data.shape[0]} number of days in the dataset.')
+    df['returns'] = df['close'].pct_change() * 100
 
-    dataset_TI_df = features(data)
+    df = get_technical_indicators(df)
 
-    data_splits = prepare_data(
-        dataset_TI_df,
-        window_size,
-        forecast_horizon
-    )
+    df = df.dropna()
 
-    X_train_tensor = torch.FloatTensor(data_splits['X_train'])
-    y_train_tensor = torch.FloatTensor(data_splits['y_train'])
-    X_val_tensor = torch.FloatTensor(data_splits['X_val'])
-    y_val_tensor = torch.FloatTensor(data_splits['y_val'])
-    X_test_tensor = torch.FloatTensor(data_splits['X_test'])
-    y_test_tensor = torch.FloatTensor(data_splits['y_test'])
+    feature_columns = ['returns', 'rsi', 'volatility']
 
-    batch_size = 64
+    feature_columns = [col for col in feature_columns if col in df.columns]
+
+    print(f"Using features: {feature_columns}")
+    print(f"Data shape after preprocessing: {df.shape}")
+
+    feature_data = df[feature_columns].values
+
+    train_size = int(len(feature_data) * 0.7)
+    val_size = int(len(feature_data) * 0.15)
+
+    train_data = feature_data[:train_size]
+    val_data = feature_data[train_size:train_size + val_size]
+    test_data = feature_data[train_size + val_size:]
+
+    scaler = StandardScaler()
+    train_data_scaled = scaler.fit_transform(train_data)
+    val_data_scaled = scaler.transform(val_data)
+    test_data_scaled = scaler.transform(test_data)
+
+    print(f"Train data shape: {train_data_scaled.shape}")
+    print(f"Val data shape: {val_data_scaled.shape}")
+    print(f"Test data shape: {test_data_scaled.shape}")
+
+    seq_len = 10
+
+    X_train, y_train = create_sequence(pd.DataFrame(train_data_scaled, columns = feature_columns),
+                                       seq_len=seq_len, target_col='returns')
+    X_val, y_val = create_sequence(pd.DataFrame(val_data_scaled, columns = feature_columns),
+                                   seq_len=seq_len, target_col='returns')
+    X_test, y_test = create_sequence(pd.DataFrame(test_data_scaled, columns = feature_columns),
+                                     seq_len=seq_len, target_col='returns')
+
+    print(f"Sequence shapes - Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
+
+    X_train_tensor = torch.FloatTensor(X_train)
+    y_train_tensor = torch.FloatTensor(y_train)
+    X_val_tensor = torch.FloatTensor(X_val)
+    y_val_tensor = torch.FloatTensor(y_val)
+    X_test_tensor = torch.FloatTensor(X_test)
+    y_test_tensor = torch.FloatTensor(y_test)
+
+    batch_size = 32
     train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
     val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
     test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
@@ -293,71 +314,136 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    print("\nInitializing VAE...")
-    vae_model = VAE(input_dim=window_size, latent_dim=4)
+    print('\nTraining VAE...')
+    vae = VAE(input_dim = len(feature_columns), latent_dim = 4)
 
-    print("Training VAE on returns sequences...")
-    train_losses, val_losses = train_vae(
-        vae_model, train_loader, val_loader, epochs=100, lr=0.001
-    )
+    vae_train_data = X_train.reshape(-1, X_train.shape[-1])
+    vae_val_data = X_val.reshape(-1, X_val.shape[-1])
 
-    train_features, train_returns = extract_vae_features(vae_model, train_loader)
-    val_features, val_returns = extract_vae_features(vae_model, val_loader)
-    test_features, test_returns = extract_vae_features(vae_model, test_loader)
+    vae_train_tensor = torch.FloatTensor(vae_train_data)
+    vae_val_tensor = torch.FloatTensor(vae_val_data)
 
-    print(f"Training features shape: {train_features.shape}")
-    print(f"Validation features shape: {val_features.shape}")
-    print(f"Test features shape: {test_features.shape}")
+    vae_train_dataset = TensorDataset(vae_train_tensor, vae_train_tensor)
+    vae_val_dataset = TensorDataset(vae_val_tensor, vae_val_tensor)
 
-    plt.figure(figsize=(15, 5))
+    vae_train_loader = DataLoader(vae_train_dataset, batch_size=batch_size, shuffle=True)
+    vae_val_loader = DataLoader(vae_val_dataset, batch_size=batch_size, shuffle=False)
 
-    plt.subplot(1, 3, 1)
-    plt.plot(train_losses, label='Train Loss')
-    plt.plot(val_losses, label='Validation Loss')
+    vae_train_losses, vae_val_losses = train_vae(vae, vae_train_loader, vae_val_loader, epochs = 50)
+
+    print("Extracting VAE features...")
+    vae.eval()
+    with torch.no_grad():
+        vae_features_train = vae().extract_features(X_train_tensor.reshape(-1, X_train_tensor.shape[-1]))
+        vae_features_val = vae().extract_features(X_val_tensor.reshape(-1, X_val_tensor.shape[-1]))
+        vae_features_test = vae().extract_features(X_test_tensor.reshape(-1, X_test_tensor.shape[-1]))
+
+    vae_features_train = vae_features_train.reshape(X_train.shape[0], seq_len, -1)
+    vae_features_val = vae_features_val.reshape(X_val.shape[0], seq_len, -1)
+    vae_features_test = vae_features_test.reshape(X_test.shape[0], seq_len, -1)
+
+    print(f"VAE features shape: {vae_features_train.shape}")
+
+    print("\nInitializing GAN models...")
+    input_dim = vae_features_train.shape[-1]
+    generator = LSTMGenerator(input_dim = input_dim, hidden_dim = 128, num_layers = 2)
+    discriminator = CNNDiscriminator(input_dim = input_dim, seq_length = seq_len)
+
+    gan_train_dataset = TensorDataset(vae_features_train, y_train_tensor)
+    gan_train_loader = DataLoader(gan_train_dataset, batch_size=batch_size, shuffle=True)
+
+    print("Training GAN...")
+    g_losses, d_losses = train_gan(generator, gan_train_loader, epochs = 100)
+
+    print("\nMaking predictions...")
+    generator.eval()
+    with torch.no_grad():
+        predictions = generator(vae_features_test)
+        predictions = predictions.cpu().numpy().flatten()
+
+    actual_returns = y_test
+
+    dummy_features = np.zeros((len(predictions), len(feature_columns)))
+    dummy_features[:, 0] = predictions
+    predictions_original = scaler.inverse_transform(dummy_features)[:, 0]
+
+    dummy_actual = np.zeros((len(actual_returns), len(feature_columns)))
+    dummy_actual[:, 0] = actual_returns
+    actual_original = scaler.inverse_transform(dummy_actual)[:, 0]
+
+    mse = np.mean((predictions_original - actual_original) ** 2)
+    rmse = np.sqrt(mse)
+    mae = np.mean(np.abs(predictions_original - actual_original))
+
+    print(f"\nPerformance Metrics:")
+    print(f"MSE: {mse:.6f}")
+    print(f"RMSE: {rmse:.6f}")
+    print(f"MAE: {mae:.6f}")
+
+    plt.figure(figsize=(15, 10))
+
+    # Plot 1: VAE training loss
+    plt.subplot(2, 3, 1)
+    plt.plot(vae_train_losses, label='Train Loss')
+    plt.plot(vae_val_losses, label='Val Loss')
     plt.title('VAE Training Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
     plt.yscale('log')
 
-    plt.subplot(1, 3, 2)
-    plt.plot(data_splits['y_train_original'][:100], label='Actual Future Returns')
-    plt.title('Sample Future Returns (Training Set)')
-    plt.xlabel('Sample')
+    # Plot 2: GAN losses
+    plt.subplot(2, 3, 2)
+    plt.plot(g_losses, label='Generator Loss')
+    plt.plot(d_losses, label='Discriminator Loss')
+    plt.title('GAN Training Losses')
+    plt.xlabel('Iteration')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    # Plot 3: Predictions vs Actual (last 100 points)
+    plt.subplot(2, 3, 3)
+    n_points = min(100, len(predictions_original))
+    plt.plot(actual_original[-n_points:], label='Actual Returns', alpha=0.7)
+    plt.plot(predictions_original[-n_points:], label='Predicted Returns', alpha=0.7)
+    plt.title('Returns Prediction (Last 100 Points)')
+    plt.xlabel('Time')
     plt.ylabel('Returns (%)')
     plt.legend()
 
-    plt.subplot(1, 3, 3)
-    with torch.no_grad():
-        sample_input = X_train_tensor[:1]
-        reconstructed, _, _ = vae_model(sample_input)
-        original = data_splits['returns_scaler'].inverse_transform(sample_input.numpy())[0]
-        recon = data_splits['returns_scaler'].inverse_transform(reconstructed.numpy())[0]
+    # Plot 4: Scatter plot of predictions vs actual
+    plt.subplot(2, 3, 4)
+    plt.scatter(actual_original, predictions_original, alpha=0.5)
+    plt.plot([actual_original.min(), actual_original.max()],
+             [actual_original.min(), actual_original.max()], 'r--', lw=2)
+    plt.xlabel('Actual Returns')
+    plt.ylabel('Predicted Returns')
+    plt.title('Predictions vs Actual')
 
-        plt.plot(original, 'o-', label='Original Returns', alpha=0.7)
-        plt.plot(recon, 's-', label='Reconstructed Returns', alpha=0.7)
-        plt.title('Sample VAE Reconstruction')
-        plt.xlabel('Day')
-        plt.ylabel('Returns (%)')
-        plt.legend()
+    # Plot 5: Error distribution
+    plt.subplot(2, 3, 5)
+    errors = predictions_original - actual_original
+    plt.hist(errors, bins=50, alpha=0.7)
+    plt.xlabel('Prediction Error')
+    plt.ylabel('Frequency')
+    plt.title('Error Distribution')
+
+    # Plot 6: Cumulative returns
+    plt.subplot(2, 3, 6)
+    cumulative_actual = np.cumsum(actual_original)
+    cumulative_predicted = np.cumsum(predictions_original)
+    plt.plot(cumulative_actual, label='Actual Cumulative Returns')
+    plt.plot(cumulative_predicted, label='Predicted Cumulative Returns')
+    plt.title('Cumulative Returns')
+    plt.xlabel('Time')
+    plt.ylabel('Cumulative Returns (%)')
+    plt.legend()
 
     plt.tight_layout()
     plt.show()
 
-    torch.save(vae_model.state_dict(), f'GS_returns_vae_model.pth')
-
-    prediction_data = {
-        'train_features': train_features,
-        'train_returns': data_splits['y_train_original'],
-        'val_features': val_features,
-        'val_returns': data_splits['y_val_original'],
-        'test_features': test_features,
-        'test_returns': data_splits['y_test_original'],
-        'returns_scaler': data_splits['returns_scaler'],
-        'target_scaler': data_splits['target_scaler']
-    }
-
-    np.savez(f'GS_returns_vae_features.npz', **prediction_data)
+    print("\nTraining completed successfully!")
+    print(f"Final model predicts returns with RMSE: {rmse:.6f}")
 
 
 if __name__ == '__main__':
