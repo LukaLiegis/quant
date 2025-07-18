@@ -153,10 +153,9 @@ def create_sequence(
 
 
 def vae_loss_function(recon_x, x, mu, log_var, beta: float = 1.0):
-    recon_loss = F.mse_loss(recon_x, x, reduction='mean')
-    kl_div = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-    kl_div = kl_div / x.size(0)
-    return recon_loss + beta * kl_div
+    recon_loss = F.mse_loss(recon_x, x, reduction='sum')
+    kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return recon_loss + kl_loss
 
 
 def train_vae(model, train_loader, val_loader, epochs = 100, lr = 0.001):
