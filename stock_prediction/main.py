@@ -116,8 +116,16 @@ class CNNDiscriminator(nn.Module):
         return x
 
 
-def get_data() -> pd.DataFrame:
-    df = pd.read_csv('xnas-itch-20180501-20250430.ohlcv-1s.csv.zst', compression='zstd')
+def get_technical_indidcators(data):
+    df = data.copy()
+
+    delta = df['close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window = 14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window = 14).mean()
+    rs = gain / loss
+    df['rsi'] = 100 - (100 / (1 + rs))
+
+    df['volatility'] = df['close'].pct_change().rolling(window = 20).std()
 
     return df
 
