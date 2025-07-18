@@ -118,7 +118,7 @@ class CNNDiscriminator(nn.Module):
         return x
 
 
-def get_technical_indidcators(data):
+def get_technical_indicators(data):
     df = data.copy()
 
     delta = df['close'].diff()
