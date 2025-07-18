@@ -1,3 +1,5 @@
+from ctypes.wintypes import tagSIZE
+
 import torch
 import numpy as np
 import pandas as pd
@@ -130,30 +132,24 @@ def get_technical_indidcators(data):
     return df
 
 
-def features(dataset):
-    dataset['returns'] = ((dataset['close'] / dataset['close'].shift(1)) - 1) * 100
+def create_sequence(
+        data: pd.DataFrame,
+        seq_len: int = 10,
+        target_col: str = 'returns',
+) -> Tuple:
 
-    return dataset
+    sequences = []
+    targets = []
 
+    for i in range(len(data) - seq_len):
+        seq = data.iloc[i:i + seq_len].values
+        target = data.iloc[i + seq_len][target_col]
 
-def create_returns_sequence(data: pd.DataFrame, window_size: int, forecast_horizon: int) -> Tuple:
-    returns = data['returns'].values
+        if not (np.isnan(seq).any() or np.isnan(target)):
+            sequences.append(seq)
+            targets.append(target)
 
-    X = []
-    y = []
-    valid_indices = []
-
-    for i in range(window_size, len(returns) - forecast_horizon + 1):
-        returns_window = returns[i - window_size:i]
-
-        future_return = returns[i + forecast_horizon - 1]
-
-        if not (np.isnan(returns_window).any() or np.isnan(future_return)):
-            X.append(returns_window)
-            y.append(future_return)
-            valid_indices.append(i)
-
-    return np.array(X), np.array(y), valid_indices
+    return np.array(sequences), np.array(targets)
 
 
 def vae_loss_function(recon_x, x, mu, log_var, beta: float = 1.0):
