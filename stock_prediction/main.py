@@ -64,14 +64,20 @@ class VAE(nn.Module):
 
 
 class LSTMGenerator(nn.Module):
-    def __init__(self, input_dim, hidden_dim = 128, num_layers = 2):
+    def __init__(self, input_dim, hidden_dim = 500, num_layers = 1, dropout = 0.2):
         super(LSTMGenerator, self).__init__()
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
 
-        self.lstm = nn.LSTM(input_size = input_dim, hidden_size = hidden_dim, num_layers = num_layers, batch_first = True)
+        self.lstm = nn.LSTM(
+            input_size = input_dim,
+            hidden_size = hidden_dim,
+            num_layers = num_layers,
+            batch_first = True,
+            dropout = dropout if num_layers > 1 else 0,
+        )
+        self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(hidden_dim, 1)
-        self.dropout = nn.Dropout(0.2)
 
     def forward(self, x):
         lstm_out, _ = self.lstm(x)
