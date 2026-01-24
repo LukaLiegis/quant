@@ -26,6 +26,10 @@ Relevance: Provides insights into asset risk measurement, critical for portfolio
 
 **Relevance**: Demonstrates a scalable, risk-managed approach to capturing momentum-driven returns.  
 
+### [Statistical Factor Model](./statistical-factor-model)
+A fully usable statistical risk factor model suitable for trading. 
+
+
 ### [Waymo Long Strategy](./waymo_long)
 **Objective**: Isolate the value of Waymo within Google’s stock price for a targeted long strategy.
 
