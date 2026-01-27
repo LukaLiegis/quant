@@ -53,13 +53,18 @@ def _two_stage_pca(
 
     shrinked_eigenvalues = _shrink_eigenvalues(eigenvalues, gamma)
 
+    min_eigenvalue = max(gamma / 10, 0.1)
+    shrinked_eigenvalues = np.maximum(shrinked_eigenvalues, min_eigenvalue)
+
     if n_factors < len(S_2):
         remaining_eigenvalues = S_2[n_factors:] ** 2 / T
         lambda_bar = np.mean(remaining_eigenvalues)
     else:
         lambda_bar = 1.0
 
-    loadings = idio_std_proxy[:, np.newaxis] * U_N
+    lambda_bar = max(lambda_bar, 1.0)
+
+    loadings = U_N * np.sqrt(n_assets)
 
     idio_variances = lambda_bar * idio_std_proxy ** 2
 
