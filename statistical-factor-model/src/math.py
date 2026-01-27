@@ -1,44 +1,26 @@
 import numpy as np
 
-from numpy.lib.stride_tricks import sliding_window_view
-
 
 def winsorize(
-        arr: np.ndarray,
-        threshold: float = 5.0,
-        window: int = 252,
+        data: np.ndarray,
+        percentile: float = 0.05,
+        axis: int = 0
 ) -> np.ndarray:
     """
-    Winsorize returns using a robust z-score filter.
+    Windorize each vector of a 2D numpy array to symmetric percentiles given by `percentile`.
     """
-    squeeze = arr.ndim == 1
-    if squeeze:
-        arr = arr[np.newaxis, :]
+    try:
+        if not 0 <= percentile <= 1:
+            raise ValueError("`percentile` must be between 0 and 1")
+    except AttributeError as e:
+        raise TypeError("`percentile` must be a numeric type, such as an int or float") from e
 
-    n_assets, n_periods = arr.shape
+    fin_data = np.where(np.isfinite(data), data, np.nan)
 
-    if n_periods <= window:
-        return arr.squeeze() if squeeze else arr.copy()
+    lower_bounds = np.nanpercentile(fin_data, percentile * 100, axis=axis, keepdims=True)
+    upper_bounds = np.nanpercentile(fin_data, (1 - percentile) * 100, axis=axis, keepdims=True)
 
-    log_ret = np.log1p(arr)
-    abs_log_ret = np.abs(log_ret)
-
-    windows = sliding_window_view(abs_log_ret, window_shape=window, axis=1)
-    rolling_med = np.median(windows, axis=1)
-
-    med_aligned = np.maximum(rolling_med[:, :-1], 1e-10)
-
-    d = abs_log_ret[:, window:] / med_aligned
-
-    outliers = d > threshold
-    capped_abs = threshold * med_aligned
-    signs = np.sign(log_ret[:, window:])
-    capped_ret = np.expm1(signs * capped_abs)
-
-    out = arr.copy()
-    out[:, window:] = np.where(outliers, capped_ret, arr[:, window:])
-
-    return out.squeeze() if squeeze else out
+    return np.clip(data, lower_bounds, upper_bounds)
 
 
 def _compute_exponential_weights(
