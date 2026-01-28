@@ -75,6 +75,10 @@ Relevance: Provides insights into asset risk measurement, critical for portfolio
 This project is based on the paper Expected Returns in Treasury Bonds and the main idea is that treasury yields can be decomposed into economically viable factors.  
 
 
+[Derivatives Payoff](./derivatives_payoff)
+
+This is just some plotting of the payoff charts of different derivatives. I wanted to do a project related to options, but due to a lack of data (and not wanting to generate fake data) I decided this was a nice place to start. 
+
 ## Get in Touch
 I’m passionate about applying quantitative methods to solve complex financial problems and am eager to contribute to a forward-thinking team. Connect with me on LinkedIn or email me at luka.liegis@gmail.com to discuss how my work can add value to your portfolio management strategies.
 
