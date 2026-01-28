@@ -19,3 +19,10 @@ The reason that I have also plotted the VIX is because I was interested in seein
 ```
 
 ![regression_plot](myplot2.png)
+
+After running a linear regression 
+
+This is a very basic project but some uses could be:
+- Applying this to assets where a VIX does not exist.
+- Backtesting strategies pre 1990.
+- Risk model input.

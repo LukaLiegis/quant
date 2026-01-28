@@ -6,7 +6,7 @@ The idea itself is just that we estimate the daily beta for a basket of stocks a
 
 ### Beta Compression Calculation
 
-![plot](myplot.png)
+![plot](beta_compression.png)
 
 ### Beta Compression as a Signal
 

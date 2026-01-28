@@ -9,6 +9,10 @@ This strategy is based on the Solomon Smith Barney paper titled Principles of Pr
 
 ### Outline
 
+
+
+### Result
+
 ![plot](myplot.png)
 
 ### Improvements

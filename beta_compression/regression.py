@@ -16,6 +16,22 @@ def load_data() -> Tuple[pd.DataFrame, pd.Series]:
     return beta_stats, spy_prices
 
 
+def calculate_returns(
+        prices: pd.Series,
+        horizon: int = 63
+) -> pd.Series:
+    dates = []
+    returns = []
+
+    return
+
+
+def regression(
+        df: pd.DataFrame,
+):
+    ...
+
+
 def main():
     beta_stats, spy_prices = load_data()
 

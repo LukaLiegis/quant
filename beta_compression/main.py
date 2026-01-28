@@ -77,14 +77,14 @@ def plot_compression(
         beta_stats: pd.DataFrame,
 ) -> None:
 
-    fig, ax1 = plt.subplots(1, 1, figsize = (12, 8))
+    fig, ax1 = plt.subplots(1, 1, figsize = (16, 10), dpi = 300)
     ax1.plot(beta_stats['IQR'])
     ax1.set_title('Beta Compression Over Time')
     ax1.set_xlabel('Date')
     ax1.set_ylabel('IQR')
     ax1.grid(True)
 
-    plt.show()
+    plt.savefig('beta_compression.png')
 
 
 def main():

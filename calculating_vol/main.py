@@ -171,10 +171,6 @@ def plot_scatter(ewma_vol: pd.Series, vix_data: pd.Series) -> None:
     vix_aligned = vix_data.reindex(ewma_vol.index, method='ffill')
     mask = ~(np.isnan(ewma_vol) | np.isnan(vix_aligned))
 
-    if mask.sum() == 0:
-        print("No valid data points for scatter plot")
-        return
-
     x_data = ewma_vol[mask].values
     y_data = vix_aligned[mask].values
 
