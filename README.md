@@ -62,13 +62,9 @@ Relevance: Provides insights into asset risk measurement, critical for portfolio
 
 **Relevance**: Provides insights into interest rate risk and macro-driven portfolio strategies.  
 
-[Stock Prediction AI](./stock_prediction)
+[Rteurns Prediction with Trading Strategy](equities-returns-prediction)
 
-**Objective**: Reimplement a variational autoencoder and Wasserstein GAN for day-ahead stock return forecasting.
-
-**Approach**: Used Bayesian optimization to tune hyperparameters, generating predictive features from return datasets.
-
-**Relevance**: Demonstrates advanced machine learning techniques for alpha generation and predictive modeling.  
+The whole idea of this project is to use a cool ML technique to predict the returns of multiple assets and then use portfolio optimization techniques to turn it into a profitable trading strategy.   
 
 [Treasury Expected Returns](./treasury-bend-expected-returns)
 
