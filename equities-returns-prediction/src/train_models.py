@@ -1,6 +1,6 @@
 import numpy as np
 from xgboost import XGBRegressor
-from config import XGBoostConfig
+from src.config import XGBoostConfig
 
 
 def train_models(

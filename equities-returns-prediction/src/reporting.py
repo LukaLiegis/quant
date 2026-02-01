@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from config import BacktestResults
-from metrics import compute_sharpe, compute_max_drawdown
+from src.config import BacktestResults
+from src.metrics import compute_sharpe, compute_max_drawdown
 
 
 def print_results(
