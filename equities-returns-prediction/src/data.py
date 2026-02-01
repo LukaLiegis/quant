@@ -17,7 +17,7 @@ def load_and_prepare_data(
         on='symbol'
     ).sort('date').fill_null(strategy='forward').drop_nulls()
 
-    symbols = (returns_wide.select(pl.exclude('date')).columns).to_list()
+    symbols = returns_wide.select(pl.exclude('date')).columns.to_list()
     dates = returns_wide.select(pl.col('date')).to_numpy()
     returns_matrix = returns_wide.select(symbols).to_numpy()
 
