@@ -7,7 +7,7 @@ def compute_max_drawdown(
     """
     Compute maximum drawdown of a returns series.
     """
-    cumulative = (1 + returns).cumprod() - 1
+    cumulative = (1 + returns).cumprod()
     running_max = np.maximum.accumulate(cumulative)
     drawdowns = (cumulative - running_max) / running_max
     return drawdowns.min()
