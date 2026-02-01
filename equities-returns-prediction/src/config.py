@@ -6,6 +6,8 @@ class WalkForwardConfig:
     train_size: int = 50_000
     test_size: int = 5_000
     step_size: int = 5_000
+    max_position: float | None = 0.3
+    fee_rate: float = 0.05 / 100
 
 @dataclass
 class XGBoostConfig:
@@ -20,3 +22,5 @@ class BacktestResults:
     positions: np.ndarray
     actuals: np.ndarray
     symbols: list[str]
+    total_fees: float
+    turnover: float
